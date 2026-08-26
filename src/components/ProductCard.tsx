@@ -4,6 +4,8 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDeleteProduct, useSetProductActive } from '../lib/queries/products'
 import type { ProductWithVariants } from '../types/db'
+import Button from './ui/Button'
+import Card from './ui/Card'
 
 export default function ProductCard({ product }: { product: ProductWithVariants }) {
   const [expanded, setExpanded] = useState(false)
@@ -12,11 +14,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
   const deleteProduct = useDeleteProduct()
 
   return (
-    <div
-      className={`overflow-hidden rounded-2xl border border-border bg-surface ${
-        product.is_active ? '' : 'opacity-60'
-      }`}
-    >
+    <Card className={`overflow-hidden ${product.is_active ? '' : 'opacity-60'}`}>
       <button
         type="button"
         onClick={() => setExpanded((e) => !e)}
@@ -63,7 +61,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
                     return (
                       <li key={v.id} className="flex items-center justify-between text-sm">
                         <span className="text-ink">{v.label}</span>
-                        <span className="flex items-center gap-2 tabular-nums">
+                        <span className="flex items-center gap-2">
                           {v.track_stock && (
                             <span className={low ? 'text-chili' : 'text-ink/50'}>
                               {v.current_stock} in stock
@@ -78,26 +76,30 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
               )}
 
               <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
-                <button
-                  type="button"
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  flex1
                   onClick={() => navigate(`/products/${product.id}/edit`)}
-                  className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-lg bg-paper text-sm font-medium text-ink"
                 >
                   <Pencil className="h-3.5 w-3.5" />
                   Edit
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  flex1
                   disabled={setActive.isPending}
                   onClick={() =>
                     setActive.mutate({ id: product.id, isActive: !product.is_active })
                   }
-                  className="flex h-9 flex-1 items-center justify-center rounded-lg bg-paper text-sm font-medium text-ink disabled:opacity-50"
                 >
                   {product.is_active ? 'Deactivate' : 'Activate'}
-                </button>
-                <button
-                  type="button"
+                </Button>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  iconOnly
                   disabled={deleteProduct.isPending}
                   onClick={() => {
                     if (
@@ -108,16 +110,15 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
                       deleteProduct.mutate(product.id)
                     }
                   }}
-                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-chili/10 text-chili disabled:opacity-50"
                   aria-label="Delete product"
                 >
                   <Trash2 className="h-4 w-4" />
-                </button>
+                </Button>
               </div>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
-    </div>
+    </Card>
   )
 }

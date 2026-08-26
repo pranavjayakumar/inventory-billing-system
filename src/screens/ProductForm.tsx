@@ -2,6 +2,9 @@ import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Switch from '../components/Switch'
+import Button from '../components/ui/Button'
+import Card from '../components/ui/Card'
+import TextField from '../components/ui/TextField'
 import { useProduct, useSaveProduct, type VariantInput } from '../lib/queries/products'
 
 interface VariantRow {
@@ -136,7 +139,7 @@ export default function ProductForm() {
           type="button"
           onClick={() => navigate('/products')}
           aria-label="Back"
-          className="flex h-11 w-11 items-center justify-center rounded-full -ml-2"
+          className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full"
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
@@ -146,71 +149,61 @@ export default function ProductForm() {
       </div>
 
       <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-5">
-        <div className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4">
-          <Field label="Name">
-            <input
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Tata Tea"
-              className="h-11 w-full rounded-lg border border-border bg-paper px-3 text-sm outline-none focus:border-turmeric"
-            />
-          </Field>
-          <Field label="Category (optional)">
-            <input
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              placeholder="Tea"
-              className="h-11 w-full rounded-lg border border-border bg-paper px-3 text-sm outline-none focus:border-turmeric"
-            />
-          </Field>
-          <Field label="Image URL (optional)">
-            <input
-              value={imageUrl}
-              onChange={(e) => setImageUrl(e.target.value)}
-              placeholder="https://…"
-              className="h-11 w-full rounded-lg border border-border bg-paper px-3 text-sm outline-none focus:border-turmeric"
-            />
-          </Field>
-        </div>
+        <Card className="flex flex-col gap-3 p-4">
+          <TextField
+            label="Name"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            placeholder="Tata Tea"
+          />
+          <TextField
+            label="Category (optional)"
+            value={category}
+            onChange={(e) => setCategory(e.target.value)}
+            placeholder="Tea"
+          />
+          <TextField
+            label="Image URL (optional)"
+            value={imageUrl}
+            onChange={(e) => setImageUrl(e.target.value)}
+            placeholder="https://…"
+          />
+        </Card>
 
         <div>
           <h2 className="mb-2 font-heading text-sm font-semibold">Variants</h2>
           <div className="flex flex-col gap-3">
             {variants.map((v) => (
-              <div
-                key={v.key}
-                className="flex flex-col gap-3 rounded-2xl border border-border bg-surface p-4"
-              >
+              <Card key={v.key} className="flex flex-col gap-3 p-4">
                 <div className="flex items-end gap-2">
-                  <Field label="Label" className="flex-1">
-                    <input
-                      value={v.label}
-                      onChange={(e) => updateVariant(v.key, { label: e.target.value })}
-                      placeholder="500g"
-                      className="h-11 w-full rounded-lg border border-border bg-paper px-3 text-sm outline-none focus:border-turmeric"
-                    />
-                  </Field>
-                  <Field label="Price ₹" className="flex-1">
-                    <input
-                      value={v.unit_price}
-                      onChange={(e) => updateVariant(v.key, { unit_price: e.target.value })}
-                      type="number"
-                      inputMode="decimal"
-                      step="0.01"
-                      min="0"
-                      placeholder="0.00"
-                      className="h-11 w-full rounded-lg border border-border bg-paper px-3 text-sm tabular-nums outline-none focus:border-turmeric"
-                    />
-                  </Field>
+                  <TextField
+                    label="Label"
+                    containerClassName="flex-1"
+                    value={v.label}
+                    onChange={(e) => updateVariant(v.key, { label: e.target.value })}
+                    placeholder="500g"
+                  />
+                  <TextField
+                    label="Price ₹"
+                    containerClassName="flex-1"
+                    value={v.unit_price}
+                    onChange={(e) => updateVariant(v.key, { unit_price: e.target.value })}
+                    type="number"
+                    inputMode="decimal"
+                    step="0.01"
+                    min="0"
+                    placeholder="0.00"
+                  />
                   {variants.length > 1 && (
-                    <button
-                      type="button"
+                    <Button
+                      variant="danger"
+                      size="md"
+                      iconOnly
                       onClick={() => removeVariant(v.key)}
                       aria-label="Remove variant"
-                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-chili/10 text-chili"
                     >
                       <Trash2 className="h-4 w-4" />
-                    </button>
+                    </Button>
                   )}
                 </div>
 
@@ -225,76 +218,47 @@ export default function ProductForm() {
 
                 {v.track_stock && (
                   <div className="flex gap-2">
-                    <Field label="Current stock" className="flex-1">
-                      <input
-                        value={v.current_stock}
-                        onChange={(e) =>
-                          updateVariant(v.key, { current_stock: e.target.value })
-                        }
-                        type="number"
-                        inputMode="decimal"
-                        step="0.001"
-                        min="0"
-                        className="h-11 w-full rounded-lg border border-border bg-paper px-3 text-sm tabular-nums outline-none focus:border-turmeric"
-                      />
-                    </Field>
-                    <Field label="Low stock alert" className="flex-1">
-                      <input
-                        value={v.low_stock_alert}
-                        onChange={(e) =>
-                          updateVariant(v.key, { low_stock_alert: e.target.value })
-                        }
-                        type="number"
-                        inputMode="decimal"
-                        step="0.001"
-                        min="0"
-                        placeholder="Optional"
-                        className="h-11 w-full rounded-lg border border-border bg-paper px-3 text-sm tabular-nums outline-none placeholder:text-ink/40 focus:border-turmeric"
-                      />
-                    </Field>
+                    <TextField
+                      label="Current stock"
+                      containerClassName="flex-1"
+                      value={v.current_stock}
+                      onChange={(e) => updateVariant(v.key, { current_stock: e.target.value })}
+                      type="number"
+                      inputMode="decimal"
+                      step="0.001"
+                      min="0"
+                    />
+                    <TextField
+                      label="Low stock alert"
+                      containerClassName="flex-1"
+                      value={v.low_stock_alert}
+                      onChange={(e) =>
+                        updateVariant(v.key, { low_stock_alert: e.target.value })
+                      }
+                      type="number"
+                      inputMode="decimal"
+                      step="0.001"
+                      min="0"
+                      placeholder="Optional"
+                    />
                   </div>
                 )}
-              </div>
+              </Card>
             ))}
           </div>
 
-          <button
-            type="button"
-            onClick={addVariant}
-            className="mt-3 flex h-11 w-full items-center justify-center gap-1.5 rounded-xl border border-dashed border-border text-sm font-medium text-ink/70"
-          >
+          <Button variant="outline" fullWidth className="mt-3" onClick={addVariant}>
             <Plus className="h-4 w-4" />
             Add variant
-          </button>
+          </Button>
         </div>
 
         {error && <p className="text-sm text-chili">{error}</p>}
 
-        <button
-          type="submit"
-          disabled={saveProduct.isPending}
-          className="h-12 w-full rounded-xl bg-turmeric text-sm font-semibold text-surface disabled:opacity-60"
-        >
+        <Button type="submit" variant="primary" size="lg" fullWidth disabled={saveProduct.isPending}>
           {saveProduct.isPending ? 'Saving…' : 'Save product'}
-        </button>
+        </Button>
       </form>
     </div>
-  )
-}
-
-function Field({
-  label,
-  children,
-  className = '',
-}: {
-  label: string
-  children: React.ReactNode
-  className?: string
-}) {
-  return (
-    <label className={`flex flex-col gap-1 ${className}`}>
-      <span className="text-xs font-medium text-ink/60">{label}</span>
-      {children}
-    </label>
   )
 }

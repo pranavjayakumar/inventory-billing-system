@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import ProductCard from '../components/ProductCard'
+import Button from '../components/ui/Button'
 import { useProducts } from '../lib/queries/products'
 
 export default function Products() {
@@ -40,7 +41,7 @@ export default function Products() {
       <h1 className="font-heading text-xl font-semibold">Products</h1>
 
       {hasAnyProducts && (
-        <div className="mt-4 flex h-11 items-center gap-2 rounded-xl border border-border bg-surface px-3">
+        <div className="mt-4 flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3">
           <Search className="h-4 w-4 shrink-0 text-ink/40" />
           <input
             value={search}
@@ -69,14 +70,10 @@ export default function Products() {
           title="No products yet"
           description="Add your first one to start building bills."
           action={
-            <button
-              type="button"
-              onClick={() => navigate('/products/new')}
-              className="mt-2 flex h-11 items-center gap-2 rounded-xl bg-turmeric px-4 text-sm font-medium text-surface"
-            >
+            <Button className="mt-2" onClick={() => navigate('/products/new')}>
               <Plus className="h-4 w-4" />
               Add product
-            </button>
+            </Button>
           }
         />
       )}
@@ -100,18 +97,6 @@ export default function Products() {
             </div>
           ))}
         </div>
-      )}
-
-      {hasAnyProducts && (
-        <button
-          type="button"
-          onClick={() => navigate('/products/new')}
-          aria-label="Add product"
-          className="fixed bottom-24 right-4 z-10 mx-auto flex h-14 w-14 max-w-[480px] items-center justify-center rounded-full bg-turmeric text-surface shadow-lg shadow-turmeric/30 active:scale-95"
-          style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1rem))' }}
-        >
-          <Plus className="h-6 w-6" strokeWidth={2.5} />
-        </button>
       )}
     </div>
   )

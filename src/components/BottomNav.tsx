@@ -1,6 +1,7 @@
 import { motion } from 'framer-motion'
 import { Home, Package, Plus, Receipt, Settings, type LucideIcon } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
+import { FAB_CLASSNAME } from '../lib/ui'
 
 const leftTabs = [
   { to: '/', label: 'Home', icon: Home },
@@ -25,11 +26,7 @@ export default function BottomNav() {
           <NavItem key={tab.to} {...tab} active={location.pathname === tab.to} />
         ))}
 
-        <NavLink
-          to="/bill/new"
-          className="relative -top-5 flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-turmeric text-surface shadow-lg shadow-turmeric/30 transition-transform active:scale-95"
-          aria-label="New bill"
-        >
+        <NavLink to="/bill/new" className={`relative -top-5 ${FAB_CLASSNAME}`} aria-label="New bill">
           <Plus className="h-7 w-7" strokeWidth={2.5} />
         </NavLink>
 
@@ -55,7 +52,9 @@ function NavItem({
   return (
     <NavLink
       to={to}
-      className="relative flex h-11 w-16 flex-col items-center justify-center gap-0.5 text-[11px]"
+      className={`relative flex h-11 w-16 flex-col items-center justify-center gap-0.5 text-[11px] ${
+        active ? 'text-turmeric' : 'text-ink/60'
+      }`}
     >
       {active && (
         <motion.span
@@ -64,8 +63,8 @@ function NavItem({
           transition={{ type: 'spring', stiffness: 380, damping: 30 }}
         />
       )}
-      <Icon className="h-5 w-5" strokeWidth={2} color={active ? '#D9A441' : '#21261F99'} />
-      <span className={active ? 'font-medium text-ink' : 'text-ink/60'}>{label}</span>
+      <Icon className="h-5 w-5" strokeWidth={2} />
+      <span className={active ? 'font-medium text-ink' : ''}>{label}</span>
     </NavLink>
   )
 }

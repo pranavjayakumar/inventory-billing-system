@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { AnimatePresence } from 'framer-motion'
 import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
+import AddProductFab from './components/AddProductFab'
 import BottomNav from './components/BottomNav'
 import PageTransition from './components/PageTransition'
 import History from './screens/History'
@@ -85,6 +86,7 @@ export default function App() {
       <BrowserRouter>
         <div className="relative mx-auto min-h-screen max-w-[480px] bg-paper pb-20">
           <AnimatedRoutes />
+          <AddProductFab />
           <BottomNav />
         </div>
       </BrowserRouter>
