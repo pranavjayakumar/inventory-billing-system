@@ -1,9 +1,9 @@
 -- Public storage bucket for generated bill PDFs, so a bill can be shared as a
 -- real link (not just a Web Share file attachment, which has weak/inconsistent
--- support — no file-sharing target on macOS, for example).
+-- support, no file-sharing target on macOS, for example).
 --
 -- Objects are keyed by the bill's UUID (not its human-readable bill_number),
--- so the public URLs aren't sequentially guessable — same no-auth trust model
+-- so the public URLs aren't sequentially guessable: same no-auth trust model
 -- as the rest of v1 (see README), just without making every historical bill
 -- trivially enumerable.
 

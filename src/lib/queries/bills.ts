@@ -38,6 +38,23 @@ export function useCreateBill() {
   })
 }
 
+export function useBills(options: { sinceDays?: number } = {}) {
+  const { sinceDays } = options
+  return useQuery({
+    queryKey: ['bills', 'list', sinceDays ?? 'all'],
+    queryFn: async (): Promise<Bill[]> => {
+      let query = supabase.from('bills').select('*').order('created_at', { ascending: false })
+      if (sinceDays != null) {
+        const cutoff = new Date(Date.now() - sinceDays * 24 * 60 * 60 * 1000).toISOString()
+        query = query.gte('created_at', cutoff)
+      }
+      const { data, error } = await query
+      if (error) throw error
+      return data as Bill[]
+    },
+  })
+}
+
 export interface BillWithItems extends Bill {
   bill_items: BillItem[]
 }

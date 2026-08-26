@@ -62,7 +62,7 @@ export function generateBillPdf(bill: Bill, items: BillItem[], shop: ShopSetting
     startY: y,
     head: [['Item', 'Qty', 'Rate', 'Amount']],
     body: items.map((item) => [
-      `${item.product_name_snapshot} — ${item.variant_label_snapshot}`,
+      `${item.product_name_snapshot} · ${item.variant_label_snapshot}`,
       String(item.quantity),
       item.unit_price_snapshot.toFixed(2),
       item.subtotal.toFixed(2),
@@ -111,7 +111,7 @@ export function downloadPdf(doc: jsPDF, filename: string): void {
 
 /**
  * Uploads the PDF keyed by the bill's UUID (not its human-readable bill_number)
- * so public URLs aren't sequentially guessable — every historical bill would
+ * so public URLs aren't sequentially guessable: every historical bill would
  * otherwise be trivially enumerable via INV-0001.pdf, INV-0002.pdf, etc.
  */
 export async function uploadBillPdf(doc: jsPDF, billId: string): Promise<string> {

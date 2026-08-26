@@ -1,4 +1,4 @@
-# Kirana Billing — build plan
+# Kirana Billing: build plan
 
 A mobile-first billing and inventory app for a small grocery/general store owner (sugar, tea, spices, and similar staples). Single shop owner, no login in v1, generates shareable PDF bills, tracks stock only where it makes sense to.
 
@@ -7,19 +7,19 @@ A mobile-first billing and inventory app for a small grocery/general store owner
 This is a working spec for an implementing agent (Claude Code or similar) to build against. Rules for the build:
 
 - **Work phase by phase, in order.** Each phase in section 8 ends with a checkpoint. Stop there, summarize what was built and how to check it, and wait for the human to confirm before starting the next phase. Don't batch multiple phases into one pass.
-- **Don't invent scope.** If something is ambiguous, make the simplest reasonable choice, note the assumption out loud, and keep moving — don't stall on it.
+- **Don't invent scope.** If something is ambiguous, make the simplest reasonable choice, note the assumption out loud, and keep moving. Don't stall on it.
 - Everything in section 9 ("Not in v1") is explicitly deferred. Don't build it, don't scaffold for it beyond the schema fields already designed to allow it later.
-- The database is the source of truth for structure — implement section 5 exactly, including constraints.
+- The database is the source of truth for structure: implement section 5 exactly, including constraints.
 
 ---
 
 ## 1. Project summary
 
 - **User**: one shop owner, using this on their phone, mid-delivery or at the counter.
-- **Core loop**: add products with one or more variants (e.g. "Tata Tea — 250g", "Tata Tea — 1kg") → when delivering an order, build a bill by picking variants and quantities → generate a PDF → share it on WhatsApp.
-- **Stock is optional per variant.** Packaged/branded items (a sealed 1kg bag) get exact stock counts. Loose items scooped from a sack (loose sugar, loose tea) don't — the owner just never turns stock tracking on for that variant.
+- **Core loop**: add products with one or more variants (e.g. "Tata Tea (250g)", "Tata Tea (1kg)") → when delivering an order, build a bill by picking variants and quantities → generate a PDF → share it on WhatsApp.
+- **Stock is optional per variant.** Packaged/branded items (a sealed 1kg bag) get exact stock counts. Loose items scooped from a sack (loose sugar, loose tea) don't. The owner just never turns stock tracking on for that variant.
 - **No customer database.** Customer name/phone are free-text fields on the bill itself, not a saved record.
-- **No login in v1.** Add later without a rework — see section 9.
+- **No login in v1.** Add later without a rework (see section 9).
 
 ---
 
@@ -29,7 +29,7 @@ This is a working spec for an implementing agent (Claude Code or similar) to bui
 |---|---|
 | Frontend | React + Vite + TypeScript, Tailwind CSS |
 | Hosting (frontend) | Vercel or Netlify (free tier) |
-| Data | Supabase (Postgres) — free tier, accessed directly from the frontend via `supabase-js` |
+| Data | Supabase (Postgres), free tier, accessed directly from the frontend via `supabase-js` |
 | Backend logic | A single Postgres RPC function (`create_bill`) for the one operation that needs atomicity. No separate server to host or deploy. |
 | PDF | `jspdf` + `jspdf-autotable`, generated client-side |
 | Data fetching/cache | `@tanstack/react-query` |

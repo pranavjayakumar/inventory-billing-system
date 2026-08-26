@@ -177,7 +177,7 @@ export default function ProductPicker({
 
             {hiddenCount > 0 && (
               <p className="mt-3 text-center text-xs text-ink/40">
-                Showing {visibleProducts.length} of {matchingProducts.length} products — search or
+                Showing {visibleProducts.length} of {matchingProducts.length} products. Search or
                 pick a category to see more
               </p>
             )}
@@ -185,7 +185,7 @@ export default function ProductPicker({
 
           <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
             <Button fullWidth size="lg" onClick={handleClose}>
-              Done{cartCount > 0 ? ` — ${cartCount} item${cartCount === 1 ? '' : 's'}` : ''}
+              Done{cartCount > 0 ? ` (${cartCount} item${cartCount === 1 ? '' : 's'})` : ''}
             </Button>
           </div>
         </motion.div>

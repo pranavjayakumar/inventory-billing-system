@@ -64,7 +64,7 @@ function NavItem({
         />
       )}
       <Icon className="h-5 w-5" strokeWidth={2} />
-      <span className={active ? 'font-medium text-ink' : ''}>{label}</span>
+      <span className={`font-medium ${active ? 'text-ink' : ''}`}>{label}</span>
     </NavLink>
   )
 }

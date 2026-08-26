@@ -4,6 +4,7 @@ import { BrowserRouter, Route, Routes, useLocation } from 'react-router-dom'
 import AddProductFab from './components/AddProductFab'
 import BottomNav from './components/BottomNav'
 import PageTransition from './components/PageTransition'
+import BillDetail from './screens/BillDetail'
 import History from './screens/History'
 import Home from './screens/Home'
 import NewBill from './screens/NewBill'
@@ -64,6 +65,14 @@ function AnimatedRoutes() {
           element={
             <PageTransition>
               <History />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/history/:id"
+          element={
+            <PageTransition>
+              <BillDetail />
             </PageTransition>
           }
         />

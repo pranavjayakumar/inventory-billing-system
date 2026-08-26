@@ -11,9 +11,9 @@ A mobile-first billing and inventory app for a small grocery/general store. Reac
 
 ## ⚠️ Security: no auth, no RLS (v1)
 
-This app has **no login and no Row Level Security** — every table is open to anyone with the anon/publishable key, and that key is bundled into the client-side app. This is intentional for v1: a single shop owner, no multi-tenant or public-facing use.
+This app has **no login and no Row Level Security**: every table is open to anyone with the anon/publishable key, and that key is bundled into the client-side app. This is intentional for v1: a single shop owner, no multi-tenant or public-facing use.
 
-**Do not** deploy this publicly or let it hold data for more than one shop until auth + RLS policies are added (see "Not in v1" in the build plan — this is a Supabase Auth toggle plus an RLS policy pass, not a rework).
+**Do not** deploy this publicly or let it hold data for more than one shop until auth + RLS policies are added (see "Not in v1" in the build plan, this is a Supabase Auth toggle plus an RLS policy pass, not a rework).
 
 ## Stack
 

@@ -1,4 +1,4 @@
--- Kirana Billing — initial schema
+-- Kirana Billing: initial schema
 -- Run this once in the Supabase SQL editor (or via `supabase db push`).
 
 create extension if not exists pgcrypto;
@@ -52,7 +52,7 @@ create table bills (
 );
 create index idx_bills_created on bills(created_at desc);
 
--- BILL ITEMS (snapshotted — never joins back to live price)
+-- BILL ITEMS (snapshotted, never joins back to live price)
 create table bill_items (
   id uuid primary key default gen_random_uuid(),
   bill_id uuid not null references bills(id) on delete cascade,

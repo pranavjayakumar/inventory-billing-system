@@ -2,6 +2,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { CheckCircle2, Package, Plus, Share2, ShoppingCart, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import BillSummaryCard from '../components/BillSummaryCard'
 import EmptyState from '../components/EmptyState'
 import ProductPicker from '../components/ProductPicker'
 import QuantityStepper from '../components/QuantityStepper'
@@ -162,32 +163,7 @@ export default function NewBill() {
           <p className="mt-1 text-sm text-ink/60">{success.billNumber}</p>
         </div>
 
-        {billDetails && (
-          <Card className="w-full p-4 text-left">
-            <ul className="flex flex-col gap-1.5">
-              {billDetails.bill_items.map((item) => (
-                <li key={item.id} className="flex items-center justify-between gap-2 text-sm">
-                  <span className="min-w-0 truncate text-ink/70">
-                    {item.product_name_snapshot} — {item.variant_label_snapshot} × {item.quantity}
-                  </span>
-                  <span className="shrink-0 tabular-nums">₹{item.subtotal.toFixed(2)}</span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-3 flex flex-col gap-1 border-t border-border pt-3 text-sm">
-              <div className="flex items-center justify-between text-ink/60">
-                <span>Subtotal</span>
-                <span className="tabular-nums">₹{billDetails.subtotal.toFixed(2)}</span>
-              </div>
-              {billDetails.discount > 0 && (
-                <div className="flex items-center justify-between text-chili">
-                  <span>Discount</span>
-                  <span className="tabular-nums">−₹{billDetails.discount.toFixed(2)}</span>
-                </div>
-              )}
-            </div>
-          </Card>
-        )}
+        {billDetails && <BillSummaryCard bill={billDetails} />}
 
         <p className="font-display text-4xl font-semibold tabular-nums">
           ₹{success.total.toFixed(2)}
@@ -281,7 +257,7 @@ export default function NewBill() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">
-                            {item.productName} — {item.variantLabel}
+                            {item.productName} ({item.variantLabel})
                           </p>
                           <p className="text-xs text-ink/50 tabular-nums">
                             ₹{item.unitPrice.toFixed(2)} each

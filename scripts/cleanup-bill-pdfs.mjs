@@ -3,7 +3,7 @@
 //
 // Safe to run any time: the PDF in Storage is just a cache of what
 // generateBillPdf() can always rebuild from the bills/bill_items tables.
-// Deleting one doesn't touch bill history — if someone later clicks
+// Deleting one doesn't touch bill history: if someone later clicks
 // Copy link / Share on an old bill, the app re-uploads a fresh PDF to the
 // same path automatically (see uploadBillPdf in src/lib/pdf.ts).
 //
@@ -71,7 +71,7 @@ if (stale.length === 0) {
 }
 
 if (DRY_RUN) {
-  console.log('Dry run — would delete:')
+  console.log('Dry run, would delete:')
   for (const obj of stale) console.log(`  ${obj.name}  (created ${obj.created_at})`)
   process.exit(0)
 }
