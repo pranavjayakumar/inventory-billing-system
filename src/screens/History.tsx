@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BillRow from '../components/BillRow'
 import EmptyState from '../components/EmptyState'
+import ErrorBanner from '../components/ui/ErrorBanner'
 import { useBills } from '../lib/queries/bills'
 
 export default function History() {
@@ -46,7 +47,11 @@ export default function History() {
         </div>
       )}
 
-      {isError && <p className="mt-6 text-sm text-chili">Couldn't load bills. Pull to refresh.</p>}
+      {isError && (
+        <div className="mt-6">
+          <ErrorBanner>Couldn't load bills. Pull to refresh.</ErrorBanner>
+        </div>
+      )}
 
       {!isLoading && !isError && !hasAnyBills && (
         <EmptyState

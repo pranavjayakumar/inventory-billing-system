@@ -10,6 +10,7 @@ import QuantityStepper from '../components/QuantityStepper'
 import ShareSheet from '../components/ShareSheet'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
+import ErrorBanner from '../components/ui/ErrorBanner'
 import TextField from '../components/ui/TextField'
 import { downloadPdf, generateBillPdf, uploadBillPdf } from '../lib/pdf'
 import { useBillDetails, useCreateBill } from '../lib/queries/bills'
@@ -344,7 +345,11 @@ export default function NewBill() {
         </div>
       </Card>
 
-      {error && <p className="mt-3 text-sm text-chili">{error}</p>}
+      {error && (
+        <div className="mt-3">
+          <ErrorBanner>{error}</ErrorBanner>
+        </div>
+      )}
 
       <Button
         size="lg"

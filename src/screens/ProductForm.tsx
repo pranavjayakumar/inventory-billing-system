@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import Switch from '../components/Switch'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
+import ErrorBanner from '../components/ui/ErrorBanner'
 import TextField from '../components/ui/TextField'
 import { normalizeCategory } from '../lib/category'
 import { useProduct, useProducts, useSaveProduct, type VariantInput } from '../lib/queries/products'
@@ -275,7 +276,7 @@ export default function ProductForm() {
           </Button>
         </div>
 
-        {error && <p className="text-sm text-chili">{error}</p>}
+        {error && <ErrorBanner>{error}</ErrorBanner>}
 
         <Button type="submit" variant="primary" size="lg" fullWidth disabled={saveProduct.isPending}>
           {saveProduct.isPending ? 'Saving…' : 'Save product'}

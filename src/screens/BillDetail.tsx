@@ -4,6 +4,7 @@ import { useNavigate, useParams } from 'react-router-dom'
 import BillSummaryCard from '../components/BillSummaryCard'
 import ShareSheet from '../components/ShareSheet'
 import Button from '../components/ui/Button'
+import ErrorBanner from '../components/ui/ErrorBanner'
 import { downloadPdf, generateBillPdf, uploadBillPdf } from '../lib/pdf'
 import { useBillDetails } from '../lib/queries/bills'
 import { useShopSettings } from '../lib/queries/shopSettings'
@@ -46,7 +47,11 @@ export default function BillDetail() {
         <div className="mt-4 h-40 animate-pulse rounded-2xl bg-border/40" />
       )}
 
-      {isError && <p className="mt-6 text-sm text-chili">Couldn't load this bill.</p>}
+      {isError && (
+        <div className="mt-6">
+          <ErrorBanner>Couldn't load this bill.</ErrorBanner>
+        </div>
+      )}
 
       {bill && (
         <div className="mt-4 flex flex-col gap-4">

@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import ProductCard from '../components/ProductCard'
 import Button from '../components/ui/Button'
+import ErrorBanner from '../components/ui/ErrorBanner'
 import { normalizeCategory } from '../lib/category'
 import { useProducts } from '../lib/queries/products'
 
@@ -62,7 +63,9 @@ export default function Products() {
       )}
 
       {isError && (
-        <p className="mt-6 text-sm text-chili">Couldn't load products. Pull to refresh.</p>
+        <div className="mt-6">
+          <ErrorBanner>Couldn't load products. Pull to refresh.</ErrorBanner>
+        </div>
       )}
 
       {!isLoading && !isError && !hasAnyProducts && (

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
+import ErrorBanner from '../components/ui/ErrorBanner'
 import TextField from '../components/ui/TextField'
 import { useShopSettings, useUpdateShopSettings } from '../lib/queries/shopSettings'
 import { useToast } from '../lib/toastContext'
@@ -88,7 +89,7 @@ export default function Settings() {
           />
         </Card>
 
-        {error && <p className="text-sm text-chili">{error}</p>}
+        {error && <ErrorBanner>{error}</ErrorBanner>}
 
         <Button type="submit" size="lg" fullWidth disabled={updateShopSettings.isPending}>
           {updateShopSettings.isPending ? 'Saving…' : 'Save'}
