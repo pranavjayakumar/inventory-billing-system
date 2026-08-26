@@ -1,32 +1,20 @@
-# React + TypeScript + Vite
+# Kirana Billing
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+A mobile-first billing and inventory app for a small grocery/general store. React + Vite + TypeScript + Tailwind, Supabase (Postgres) as the backend, PDFs generated client-side.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+1. Create a Supabase project.
+2. Run the SQL files in [supabase/migrations/](supabase/migrations/) in order, in the Supabase SQL editor.
+3. Copy `.env.local.example` to `.env.local` and fill in your project's URL and publishable/anon key (Project Settings → API).
+4. `npm install && npm run dev`
 
-## React Compiler
+## ⚠️ Security: no auth, no RLS (v1)
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+This app has **no login and no Row Level Security** — every table is open to anyone with the anon/publishable key, and that key is bundled into the client-side app. This is intentional for v1: a single shop owner, no multi-tenant or public-facing use.
 
-## Expanding the Oxlint configuration
+**Do not** deploy this publicly or let it hold data for more than one shop until auth + RLS policies are added (see "Not in v1" in the build plan — this is a Supabase Auth toggle plus an RLS policy pass, not a rework).
 
-If you are developing a production application, we recommend enabling type-aware lint rules by installing `oxlint-tsgolint` and editing `.oxlintrc.json`:
+## Stack
 
-```json
-{
-  "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "typescript", "oxc"],
-  "options": {
-    "typeAware": true
-  },
-  "rules": {
-    "react/rules-of-hooks": "error",
-    "react/only-export-components": ["warn", { "allowConstantExport": true }]
-  }
-}
-```
-
-See the [Oxlint rules documentation](https://oxc.rs/docs/guide/usage/linter/rules) for the full list of rules and categories.
+See the build plan for the full spec, schema, and phase-by-phase build notes.
