@@ -92,7 +92,7 @@ export default function ProductPicker({
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search products or variants"
                 autoFocus
-                className="w-full bg-transparent text-sm outline-none placeholder:text-ink/40"
+                className="w-full bg-transparent text-base outline-none placeholder:text-ink/40"
               />
               {search && (
                 <button

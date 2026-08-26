@@ -48,7 +48,7 @@ export default function Products() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search products"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-ink/40"
+            className="w-full bg-transparent text-base outline-none placeholder:text-ink/40"
           />
         </div>
       )}

@@ -33,7 +33,7 @@ export default function History() {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search by customer or bill number"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-ink/40"
+            className="w-full bg-transparent text-base outline-none placeholder:text-ink/40"
           />
         </div>
       )}
