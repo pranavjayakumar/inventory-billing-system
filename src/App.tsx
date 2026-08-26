@@ -6,6 +6,7 @@ import PageTransition from './components/PageTransition'
 import History from './screens/History'
 import Home from './screens/Home'
 import NewBill from './screens/NewBill'
+import ProductForm from './screens/ProductForm'
 import Products from './screens/Products'
 import Settings from './screens/Settings'
 
@@ -30,6 +31,22 @@ function AnimatedRoutes() {
           element={
             <PageTransition>
               <Products />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/products/new"
+          element={
+            <PageTransition>
+              <ProductForm />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/products/:id/edit"
+          element={
+            <PageTransition>
+              <ProductForm />
             </PageTransition>
           }
         />
