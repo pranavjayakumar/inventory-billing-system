@@ -1,0 +1,8 @@
+export default function Home() {
+  return (
+    <div className="px-4 py-6">
+      <h1 className="font-heading text-xl font-semibold">Home</h1>
+      <p className="mt-2 text-sm text-ink/60">Dashboard coming in a later phase.</p>
+    </div>
+  )
+}
