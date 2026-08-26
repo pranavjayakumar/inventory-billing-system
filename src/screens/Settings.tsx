@@ -3,17 +3,18 @@ import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import TextField from '../components/ui/TextField'
 import { useShopSettings, useUpdateShopSettings } from '../lib/queries/shopSettings'
+import { useToast } from '../lib/toastContext'
 
 export default function Settings() {
   const { data: shopSettings, isLoading } = useShopSettings()
   const updateShopSettings = useUpdateShopSettings()
+  const toast = useToast()
 
   const [shopName, setShopName] = useState('')
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [saved, setSaved] = useState(false)
 
   useEffect(() => {
     if (!shopSettings) return
@@ -26,7 +27,6 @@ export default function Settings() {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setError(null)
-    setSaved(false)
 
     if (!shopName.trim()) {
       setError('Give your shop a name.')
@@ -41,23 +41,20 @@ export default function Settings() {
         logo_url: logoUrl.trim() || null,
       },
       {
-        onSuccess: () => {
-          setSaved(true)
-          setTimeout(() => setSaved(false), 2000)
-        },
+        onSuccess: () => toast('Settings saved', 'success'),
         onError: (err) => setError(err.message),
       },
     )
   }
 
   if (isLoading) {
-    return <div className="px-4 py-6 text-sm text-ink/50">Loading…</div>
+    return <div className="px-4 py-6 text-sm text-ink/70">Loading…</div>
   }
 
   return (
-    <div className="px-4 py-6 pb-24">
+    <div className="px-4 py-6">
       <h1 className="font-heading text-xl font-semibold">Settings</h1>
-      <p className="mt-1 text-sm text-ink/60">
+      <p className="mt-1 text-sm text-ink/70">
         This appears on every bill you generate.
       </p>
 
@@ -96,7 +93,6 @@ export default function Settings() {
         <Button type="submit" size="lg" fullWidth disabled={updateShopSettings.isPending}>
           {updateShopSettings.isPending ? 'Saving…' : 'Save'}
         </Button>
-        {saved && <p className="text-center text-sm text-cardamom">Saved.</p>}
       </form>
     </div>
   )

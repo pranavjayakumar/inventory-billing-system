@@ -104,7 +104,7 @@ export default function ShareSheet({ open, onClose, title, onDownload, getLink }
               <button
                 type="button"
                 onClick={onClose}
-                className="flex h-11 w-full items-center justify-center rounded-xl text-sm font-medium text-ink/60"
+                className="flex h-11 w-full items-center justify-center rounded-xl text-sm font-medium text-ink/70"
               >
                 Cancel
               </button>

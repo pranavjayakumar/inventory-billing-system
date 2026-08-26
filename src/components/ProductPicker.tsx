@@ -99,9 +99,11 @@ export default function ProductPicker({
                   type="button"
                   onClick={() => setSearch('')}
                   aria-label="Clear search"
-                  className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-border/60 text-ink/60"
+                  className="-my-3 -mr-3 flex h-11 w-11 shrink-0 items-center justify-center"
                 >
-                  <X className="h-3.5 w-3.5" />
+                  <span className="flex h-6 w-6 items-center justify-center rounded-full bg-border/60 text-ink/70">
+                    <X className="h-3.5 w-3.5" />
+                  </span>
                 </button>
               )}
             </div>
@@ -114,7 +116,7 @@ export default function ProductPicker({
                   className={`h-8 shrink-0 rounded-full px-3 text-xs font-medium ${
                     category === null
                       ? 'bg-turmeric text-surface'
-                      : 'border border-border bg-surface text-ink/60'
+                      : 'border border-border bg-surface text-ink/70'
                   }`}
                 >
                   All
@@ -127,7 +129,7 @@ export default function ProductPicker({
                     className={`h-8 shrink-0 rounded-full px-3 text-xs font-medium ${
                       category === c
                         ? 'bg-turmeric text-surface'
-                        : 'border border-border bg-surface text-ink/60'
+                        : 'border border-border bg-surface text-ink/70'
                     }`}
                   >
                     {c}
@@ -137,7 +139,7 @@ export default function ProductPicker({
             )}
 
             {visibleProducts.length === 0 && (
-              <p className="mt-6 text-center text-sm text-ink/50">
+              <p className="mt-6 text-center text-sm text-ink/70">
                 {search ? `No products match "${search}".` : 'No products in this category.'}
               </p>
             )}
@@ -146,7 +148,7 @@ export default function ProductPicker({
               <div className="mt-4 flex flex-col gap-3">
                 {visibleProducts.map((product) => (
                   <div key={product.id}>
-                    <p className="mb-1.5 text-xs font-medium text-ink/50">{product.name}</p>
+                    <p className="mb-1.5 text-xs font-medium text-ink/70">{product.name}</p>
                     <div className="flex flex-wrap gap-2">
                       {product.variants.map((variant) => {
                         const qty = cartQtyByVariant.get(variant.id) ?? 0
@@ -163,7 +165,7 @@ export default function ProductPicker({
                               </span>
                             )}
                             <span className="text-sm font-medium">{variant.label}</span>
-                            <span className="text-xs text-ink/50">
+                            <span className="text-xs text-ink/70">
                               ₹{variant.unit_price.toFixed(2)}
                             </span>
                           </button>
@@ -176,7 +178,7 @@ export default function ProductPicker({
             )}
 
             {hiddenCount > 0 && (
-              <p className="mt-3 text-center text-xs text-ink/40">
+              <p className="mt-3 text-center text-xs text-ink/70">
                 Showing {visibleProducts.length} of {matchingProducts.length} products. Search or
                 pick a category to see more
               </p>

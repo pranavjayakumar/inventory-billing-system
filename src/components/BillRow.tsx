@@ -16,9 +16,9 @@ export default function BillRow({ bill, onClick }: { bill: Bill; onClick: () => 
         <div className="min-w-0">
           <div className="flex items-center gap-2">
             <span className="font-heading text-sm font-semibold">{bill.bill_number}</span>
-            <span className="text-xs text-ink/40">{formatDate(bill.created_at)}</span>
+            <span className="text-xs text-ink/70">{formatDate(bill.created_at)}</span>
           </div>
-          <p className="mt-0.5 truncate text-xs text-ink/50">
+          <p className="mt-0.5 truncate text-xs text-ink/70">
             {bill.customer_name || 'Walk-in customer'}
           </p>
         </div>

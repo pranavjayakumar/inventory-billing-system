@@ -38,7 +38,7 @@ export default function Products() {
   const hasAnyProducts = (products?.length ?? 0) > 0
 
   return (
-    <div className="px-4 py-6 pb-24">
+    <div className="px-4 py-6">
       <h1 className="font-heading text-xl font-semibold">Products</h1>
 
       {hasAnyProducts && (
@@ -80,14 +80,14 @@ export default function Products() {
       )}
 
       {!isLoading && !isError && hasAnyProducts && grouped.length === 0 && (
-        <p className="mt-6 text-center text-sm text-ink/50">No products match "{search}".</p>
+        <p className="mt-6 text-center text-sm text-ink/70">No products match "{search}".</p>
       )}
 
       {!isLoading && !isError && grouped.length > 0 && (
         <div className="mt-4 flex flex-col gap-5">
           {grouped.map(([category, items]) => (
             <div key={category}>
-              <h2 className="mb-2 font-heading text-xs font-semibold uppercase tracking-wide text-ink/50">
+              <h2 className="mb-2 font-heading text-xs font-semibold uppercase tracking-wide text-ink/70">
                 {category}
               </h2>
               <div className="flex flex-col gap-3">

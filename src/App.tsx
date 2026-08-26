@@ -11,6 +11,7 @@ import NewBill from './screens/NewBill'
 import ProductForm from './screens/ProductForm'
 import Products from './screens/Products'
 import Settings from './screens/Settings'
+import { ToastProvider } from './lib/toast'
 
 const queryClient = new QueryClient()
 
@@ -92,13 +93,15 @@ function AnimatedRoutes() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        <div className="relative mx-auto min-h-screen max-w-[480px] bg-paper pb-20">
-          <AnimatedRoutes />
-          <AddProductFab />
-          <BottomNav />
-        </div>
-      </BrowserRouter>
+      <ToastProvider>
+        <BrowserRouter>
+          <div className="relative mx-auto min-h-screen max-w-[480px] bg-paper pb-[calc(5rem+env(safe-area-inset-bottom))]">
+            <AnimatedRoutes />
+            <AddProductFab />
+            <BottomNav />
+          </div>
+        </BrowserRouter>
+      </ToastProvider>
     </QueryClientProvider>
   )
 }

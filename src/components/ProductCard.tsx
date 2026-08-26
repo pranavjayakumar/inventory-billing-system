@@ -3,6 +3,7 @@ import { ChevronDown, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDeleteProduct, useSetProductActive } from '../lib/queries/products'
+import { useToast } from '../lib/toastContext'
 import type { ProductWithVariants } from '../types/db'
 import ConfirmDialog from './ConfirmDialog'
 import Button from './ui/Button'
@@ -14,6 +15,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
   const navigate = useNavigate()
   const setActive = useSetProductActive()
   const deleteProduct = useDeleteProduct()
+  const toast = useToast()
 
   return (
     <Card className={`overflow-hidden ${product.is_active ? '' : 'opacity-60'}`}>
@@ -26,12 +28,12 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
           <div className="flex items-center gap-2">
             <span className="truncate font-heading text-sm font-semibold">{product.name}</span>
             {!product.is_active && (
-              <span className="shrink-0 rounded-full bg-border px-2 py-0.5 text-[10px] font-medium text-ink/60">
+              <span className="shrink-0 rounded-full bg-border px-2 py-0.5 text-[10px] font-medium text-ink/70">
                 Inactive
               </span>
             )}
           </div>
-          <p className="mt-0.5 text-xs text-ink/50">
+          <p className="mt-0.5 text-xs text-ink/70">
             {product.variants.length} variant{product.variants.length === 1 ? '' : 's'}
           </p>
         </div>
@@ -51,7 +53,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
           >
             <div className="border-t border-border px-4 py-3">
               {product.variants.length === 0 ? (
-                <p className="text-sm text-ink/50">No variants yet.</p>
+                <p className="text-sm text-ink/70">No variants yet.</p>
               ) : (
                 <ul className="flex flex-col gap-2">
                   {product.variants.map((v) => {
@@ -65,7 +67,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
                         <span className="text-ink">{v.label}</span>
                         <span className="flex items-center gap-2">
                           {v.track_stock && (
-                            <span className={low ? 'text-chili' : 'text-ink/50'}>
+                            <span className={low ? 'text-chili' : 'text-ink/70'}>
                               {v.current_stock} in stock
                             </span>
                           )}
@@ -80,7 +82,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
               <div className="mt-4 flex items-center gap-2 border-t border-border pt-3">
                 <Button
                   variant="secondary"
-                  size="sm"
+                  size="md"
                   flex1
                   onClick={() => navigate(`/products/${product.id}/edit`)}
                 >
@@ -89,7 +91,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
                 </Button>
                 <Button
                   variant="secondary"
-                  size="sm"
+                  size="md"
                   flex1
                   disabled={setActive.isPending}
                   onClick={() =>
@@ -100,7 +102,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
                 </Button>
                 <Button
                   variant="danger"
-                  size="sm"
+                  size="md"
                   iconOnly
                   onClick={() => setConfirmDeleteOpen(true)}
                   aria-label="Delete product"
@@ -122,7 +124,12 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
         isLoading={deleteProduct.isPending}
         onCancel={() => setConfirmDeleteOpen(false)}
         onConfirm={() =>
-          deleteProduct.mutate(product.id, { onSuccess: () => setConfirmDeleteOpen(false) })
+          deleteProduct.mutate(product.id, {
+            onSuccess: () => {
+              setConfirmDeleteOpen(false)
+              toast('Product deleted', 'success')
+            },
+          })
         }
       />
     </Card>

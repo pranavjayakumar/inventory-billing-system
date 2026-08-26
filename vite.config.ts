@@ -1,7 +1,7 @@
-import tailwindcss from '@tailwindcss/vite'
-import react from '@vitejs/plugin-react'
-import { defineConfig } from 'vite'
-import { VitePWA } from 'vite-plugin-pwa'
+import tailwindcss from '@tailwindcss/vite';
+import react from '@vitejs/plugin-react';
+import { defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -12,8 +12,8 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.svg'],
       manifest: {
-        name: 'Kirana Billing',
-        short_name: 'Kirana',
+        name: 'Aniyathi Mart',
+        short_name: 'Aniyathi',
         description: 'Billing and inventory for your shop counter.',
         theme_color: '#F5F6F0',
         background_color: '#F5F6F0',
@@ -33,4 +33,4 @@ export default defineConfig({
       },
     }),
   ],
-})
+});

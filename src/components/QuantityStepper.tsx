@@ -10,23 +10,27 @@ export default function QuantityStepper({
   min?: number
 }) {
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center">
       <button
         type="button"
         onClick={() => onChange(Math.max(min, value - 1))}
         aria-label="Decrease quantity"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-paper text-ink transition-transform active:scale-90"
+        className="flex h-11 w-11 shrink-0 items-center justify-center"
       >
-        <Minus className="h-3.5 w-3.5" />
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-paper text-ink transition-transform active:scale-90">
+          <Minus className="h-3.5 w-3.5" />
+        </span>
       </button>
       <span className="w-6 text-center text-sm font-medium tabular-nums">{value}</span>
       <button
         type="button"
         onClick={() => onChange(value + 1)}
         aria-label="Increase quantity"
-        className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-paper text-ink transition-transform active:scale-90"
+        className="flex h-11 w-11 shrink-0 items-center justify-center"
       >
-        <Plus className="h-3.5 w-3.5" />
+        <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-paper text-ink transition-transform active:scale-90">
+          <Plus className="h-3.5 w-3.5" />
+        </span>
       </button>
     </div>
   )

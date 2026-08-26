@@ -13,7 +13,7 @@ export default function TextField({
 }: TextFieldProps) {
   return (
     <label className={`flex flex-col gap-1 ${containerClassName}`}>
-      <span className="text-xs font-medium text-ink/60">{label}</span>
+      <span className="text-xs font-medium text-ink/70">{label}</span>
       <input
         className={`h-11 w-full rounded-lg border border-border bg-paper px-3 text-base outline-none placeholder:text-ink/40 focus:border-turmeric ${className}`}
         {...rest}

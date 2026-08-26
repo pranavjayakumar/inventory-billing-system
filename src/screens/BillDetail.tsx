@@ -29,7 +29,7 @@ export default function BillDetail() {
   }
 
   return (
-    <div className="px-4 py-6 pb-24">
+    <div className="px-4 py-6">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -52,7 +52,7 @@ export default function BillDetail() {
         <div className="mt-4 flex flex-col gap-4">
           <div>
             <p className="font-heading text-lg font-semibold">{bill.bill_number}</p>
-            <p className="text-sm text-ink/50">
+            <p className="text-sm text-ink/70">
               {new Date(bill.created_at).toLocaleDateString('en-IN', {
                 day: '2-digit',
                 month: 'short',

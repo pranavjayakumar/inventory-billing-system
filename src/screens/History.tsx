@@ -23,7 +23,7 @@ export default function History() {
   const hasAnyBills = (bills?.length ?? 0) > 0
 
   return (
-    <div className="px-4 py-6 pb-24">
+    <div className="px-4 py-6">
       <h1 className="font-heading text-xl font-semibold">History</h1>
 
       {hasAnyBills && (
@@ -57,7 +57,7 @@ export default function History() {
       )}
 
       {!isLoading && !isError && hasAnyBills && filtered.length === 0 && (
-        <p className="mt-6 text-center text-sm text-ink/50">No bills match "{search}".</p>
+        <p className="mt-6 text-center text-sm text-ink/70">No bills match "{search}".</p>
       )}
 
       {!isLoading && !isError && filtered.length > 0 && (

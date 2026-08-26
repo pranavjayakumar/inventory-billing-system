@@ -50,7 +50,7 @@ export default function ConfirmDialog({
             <h2 id="confirm-dialog-title" className="font-heading text-base font-semibold">
               {title}
             </h2>
-            {description && <p className="mt-1.5 text-sm text-ink/60">{description}</p>}
+            {description && <p className="mt-1.5 text-sm text-ink/70">{description}</p>}
             <div className="mt-5 flex gap-2">
               <Button variant="secondary" fullWidth onClick={onCancel} disabled={isLoading}>
                 {cancelLabel}

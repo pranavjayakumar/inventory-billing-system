@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { CheckCircle2, Package, Plus, Share2, ShoppingCart, Trash2 } from 'lucide-react'
+import { Package, Plus, Share2, ShoppingCart, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import AnimatedCheckmark from '../components/AnimatedCheckmark'
 import BillSummaryCard from '../components/BillSummaryCard'
 import EmptyState from '../components/EmptyState'
 import ProductPicker from '../components/ProductPicker'
@@ -151,19 +152,22 @@ export default function NewBill() {
     const pdfReady = !!billDetails && !!shopSettings
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-6 text-center">
-        <motion.div
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-        >
-          <CheckCircle2 className="h-16 w-16 text-cardamom" strokeWidth={1.5} />
-        </motion.div>
+        <AnimatedCheckmark className="h-16 w-16 text-cardamom" />
         <div>
           <h1 className="font-heading text-xl font-semibold">Bill created</h1>
-          <p className="mt-1 text-sm text-ink/60">{success.billNumber}</p>
+          <p className="mt-1 text-sm text-ink/70">{success.billNumber}</p>
         </div>
 
-        {billDetails && <BillSummaryCard bill={billDetails} />}
+        {billDetails && (
+          <motion.div
+            initial={{ y: 24, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            transition={{ duration: 0.3, delay: 0.65, ease: 'easeOut' }}
+            className="w-full"
+          >
+            <BillSummaryCard bill={billDetails} />
+          </motion.div>
+        )}
 
         <p className="font-display text-4xl font-semibold tabular-nums">
           ₹{success.total.toFixed(2)}
@@ -200,7 +204,7 @@ export default function NewBill() {
   }
 
   return (
-    <div className="px-4 py-6 pb-24">
+    <div className="px-4 py-6">
       <h1 className="font-heading text-xl font-semibold">New bill</h1>
 
       {isLoading && (
@@ -238,7 +242,7 @@ export default function NewBill() {
         </h2>
 
         {cart.length === 0 ? (
-          <p className="text-sm text-ink/50">Tap "Add items" above to start this bill.</p>
+          <p className="text-sm text-ink/70">Tap "Add items" above to start this bill.</p>
         ) : (
           <div className="flex flex-col gap-2">
             <AnimatePresence initial={false}>
@@ -259,7 +263,7 @@ export default function NewBill() {
                           <p className="truncate text-sm font-medium">
                             {item.productName} ({item.variantLabel})
                           </p>
-                          <p className="text-xs text-ink/50 tabular-nums">
+                          <p className="text-xs text-ink/70 tabular-nums">
                             ₹{item.unitPrice.toFixed(2)} each
                           </p>
                         </div>
@@ -267,7 +271,7 @@ export default function NewBill() {
                           type="button"
                           onClick={() => removeFromCart(item.variantId)}
                           aria-label="Remove item"
-                          className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg text-ink/40"
+                          className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink/70"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -322,7 +326,7 @@ export default function NewBill() {
           min="0"
           placeholder="0.00"
         />
-        <div className="flex items-center justify-between text-sm text-ink/60">
+        <div className="flex items-center justify-between text-sm text-ink/70">
           <span>Subtotal</span>
           <span className="tabular-nums">₹{subtotal.toFixed(2)}</span>
         </div>

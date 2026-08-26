@@ -44,6 +44,12 @@ select {
   }
 }
 
+@keyframes draw-stroke {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
 .torn-edge {
   clip-path: polygon(
     0% 0%,

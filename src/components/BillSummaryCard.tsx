@@ -15,7 +15,7 @@ export default function BillSummaryCard({ bill }: { bill: BillWithItems }) {
         ))}
       </ul>
       <div className="mt-3 flex flex-col gap-1 border-t border-border pt-3 text-sm">
-        <div className="flex items-center justify-between text-ink/60">
+        <div className="flex items-center justify-between text-ink/70">
           <span>Subtotal</span>
           <span className="tabular-nums">₹{bill.subtotal.toFixed(2)}</span>
         </div>

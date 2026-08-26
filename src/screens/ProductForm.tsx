@@ -7,6 +7,7 @@ import Card from '../components/ui/Card'
 import TextField from '../components/ui/TextField'
 import { normalizeCategory } from '../lib/category'
 import { useProduct, useProducts, useSaveProduct, type VariantInput } from '../lib/queries/products'
+import { useToast } from '../lib/toastContext'
 
 interface VariantRow {
   key: string
@@ -36,6 +37,7 @@ export default function ProductForm() {
   const { data: product, isLoading } = useProduct(id)
   const { data: allProducts } = useProducts()
   const saveProduct = useSaveProduct()
+  const toast = useToast()
 
   const existingCategories = useMemo(() => {
     const set = new Set<string>()
@@ -133,18 +135,21 @@ export default function ProductForm() {
         variants: parsedVariants,
       },
       {
-        onSuccess: () => navigate('/products'),
+        onSuccess: () => {
+          toast(isEditing ? 'Product updated' : 'Product added', 'success')
+          navigate('/products')
+        },
         onError: (err) => setError(err.message),
       },
     )
   }
 
   if (isEditing && isLoading) {
-    return <div className="px-4 py-6 text-sm text-ink/50">Loading…</div>
+    return <div className="px-4 py-6 text-sm text-ink/70">Loading…</div>
   }
 
   return (
-    <div className="px-4 py-6 pb-24">
+    <div className="px-4 py-6">
       <div className="flex items-center gap-3">
         <button
           type="button"

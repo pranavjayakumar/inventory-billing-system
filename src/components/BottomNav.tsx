@@ -53,7 +53,7 @@ function NavItem({
     <NavLink
       to={to}
       className={`relative flex h-11 w-16 flex-col items-center justify-center gap-0.5 text-[11px] ${
-        active ? 'text-turmeric' : 'text-ink/60'
+        active ? 'text-turmeric' : 'text-ink/70'
       }`}
     >
       {active && (

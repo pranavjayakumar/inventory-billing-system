@@ -73,7 +73,7 @@ export default function Home() {
   }
 
   return (
-    <div className="px-4 py-6 pb-24">
+    <div className="px-4 py-6">
       <h1 className="font-heading text-xl font-semibold">Home</h1>
 
       {isLoading ? (
@@ -85,7 +85,7 @@ export default function Home() {
       ) : (
         <div className="mt-4 flex flex-col gap-4">
           <Card className="torn-edge p-5 pb-8">
-            <p className="text-sm text-ink/60">Today's sales</p>
+            <p className="text-sm text-ink/70">Today's sales</p>
             <p className="mt-1 font-display text-5xl font-semibold tabular-nums">
               ₹{todayTotal.toFixed(2)}
             </p>
@@ -93,13 +93,13 @@ export default function Home() {
 
           <div className="grid grid-cols-2 gap-3">
             <Card className="p-4">
-              <p className="text-xs text-ink/50">This week</p>
+              <p className="text-xs text-ink/70">This week</p>
               <p className="mt-1 font-heading text-lg font-semibold tabular-nums">
                 ₹{weekTotal.toFixed(2)}
               </p>
             </Card>
             <Card className="p-4">
-              <p className="text-xs text-ink/50">Last 30 days</p>
+              <p className="text-xs text-ink/70">Last 30 days</p>
               <p className="mt-1 font-heading text-lg font-semibold tabular-nums">
                 ₹{monthTotal.toFixed(2)}
               </p>
@@ -139,7 +139,7 @@ export default function Home() {
                 {topProducts.map((p, i) => (
                   <div key={p.key} className="flex items-center justify-between gap-2 p-3">
                     <span className="flex items-center gap-2 text-sm">
-                      <span className="text-ink/40">{i + 1}</span>
+                      <span className="text-ink/70">{i + 1}</span>
                       {p.name}
                     </span>
                     <span className="shrink-0 text-sm font-medium tabular-nums">
