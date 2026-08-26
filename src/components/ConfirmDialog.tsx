@@ -33,7 +33,7 @@ export default function ConfirmDialog({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40 sm:items-center"
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40"
           onClick={onCancel}
         >
           <motion.div
@@ -45,7 +45,7 @@ export default function ConfirmDialog({
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="confirm-dialog-title"
-            className="mx-4 mb-4 w-full max-w-[400px] rounded-2xl bg-surface p-5 sm:mb-auto"
+            className="w-full max-w-[480px] rounded-t-2xl bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
           >
             <h2 id="confirm-dialog-title" className="font-heading text-base font-semibold">
               {title}

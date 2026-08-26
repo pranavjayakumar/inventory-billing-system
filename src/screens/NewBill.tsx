@@ -1,26 +1,18 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import {
-  CheckCircle2,
-  Download,
-  Package,
-  Search,
-  Share2,
-  ShoppingCart,
-  Trash2,
-  X,
-} from 'lucide-react'
+import { CheckCircle2, Package, Search, Share2, ShoppingCart, Trash2, X } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import QuantityStepper from '../components/QuantityStepper'
+import ShareSheet from '../components/ShareSheet'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import TextField from '../components/ui/TextField'
 import { normalizeCategory } from '../lib/category'
+import { downloadPdf, generateBillPdf, uploadBillPdf } from '../lib/pdf'
 import { useBillDetails, useCreateBill } from '../lib/queries/bills'
 import { useProducts } from '../lib/queries/products'
 import { useShopSettings } from '../lib/queries/shopSettings'
-import { canSharePdfFiles, generateBillPdf, shareOrDownloadPdf } from '../lib/pdf'
 import type { ProductWithVariants, Variant } from '../types/db'
 
 interface CartItem {
@@ -43,8 +35,7 @@ export default function NewBill() {
   )
   const { data: billDetails } = useBillDetails(success?.billId)
   const { data: shopSettings } = useShopSettings()
-  const [pdfStatus, setPdfStatus] = useState<'idle' | 'working' | 'done'>('idle')
-  const [pdfError, setPdfError] = useState<string | null>(null)
+  const [shareSheetOpen, setShareSheetOpen] = useState(false)
 
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string | null>(null)
@@ -165,27 +156,24 @@ export default function NewBill() {
     setDiscount('')
     setError(null)
     setSuccess(null)
-    setPdfStatus('idle')
-    setPdfError(null)
+    setShareSheetOpen(false)
   }
 
-  async function handlePdfAction() {
-    if (!billDetails || !shopSettings) return
-    setPdfStatus('working')
-    setPdfError(null)
-    try {
-      const doc = generateBillPdf(billDetails, billDetails.bill_items, shopSettings)
-      await shareOrDownloadPdf(doc, `${billDetails.bill_number}.pdf`)
-      setPdfStatus('done')
-    } catch (err) {
-      setPdfError(err instanceof Error ? err.message : 'Could not generate the PDF.')
-      setPdfStatus('idle')
-    }
+  function buildDoc() {
+    if (!billDetails || !shopSettings) throw new Error('Bill not ready yet.')
+    return generateBillPdf(billDetails, billDetails.bill_items, shopSettings)
+  }
+
+  function handleDownload() {
+    downloadPdf(buildDoc(), `${billDetails!.bill_number}.pdf`)
+  }
+
+  async function handleGetLink() {
+    return uploadBillPdf(buildDoc(), billDetails!.id)
   }
 
   if (success) {
     const pdfReady = !!billDetails && !!shopSettings
-    const canWebShare = canSharePdfFiles()
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-6 text-center">
         <motion.div
@@ -199,23 +187,47 @@ export default function NewBill() {
           <h1 className="font-heading text-xl font-semibold">Bill created</h1>
           <p className="mt-1 text-sm text-ink/60">{success.billNumber}</p>
         </div>
+
+        {billDetails && (
+          <Card className="w-full p-4 text-left">
+            <ul className="flex flex-col gap-1.5">
+              {billDetails.bill_items.map((item) => (
+                <li key={item.id} className="flex items-center justify-between gap-2 text-sm">
+                  <span className="min-w-0 truncate text-ink/70">
+                    {item.product_name_snapshot} — {item.variant_label_snapshot} × {item.quantity}
+                  </span>
+                  <span className="shrink-0 tabular-nums">₹{item.subtotal.toFixed(2)}</span>
+                </li>
+              ))}
+            </ul>
+            <div className="mt-3 flex flex-col gap-1 border-t border-border pt-3 text-sm">
+              <div className="flex items-center justify-between text-ink/60">
+                <span>Subtotal</span>
+                <span className="tabular-nums">₹{billDetails.subtotal.toFixed(2)}</span>
+              </div>
+              {billDetails.discount > 0 && (
+                <div className="flex items-center justify-between text-chili">
+                  <span>Discount</span>
+                  <span className="tabular-nums">−₹{billDetails.discount.toFixed(2)}</span>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
+
         <p className="font-display text-4xl font-semibold tabular-nums">
           ₹{success.total.toFixed(2)}
         </p>
 
-        <div className="mt-2 flex w-full gap-2">
-          <Button
-            variant="secondary"
-            fullWidth
-            disabled={!pdfReady || pdfStatus === 'working'}
-            onClick={handlePdfAction}
-          >
-            {canWebShare ? <Share2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
-            {pdfStatus === 'working' ? 'Preparing…' : canWebShare ? 'Share PDF' : 'Download PDF'}
-          </Button>
-        </div>
-        {pdfStatus === 'done' && <p className="text-xs text-cardamom">Ready to send.</p>}
-        {pdfError && <p className="text-xs text-chili">{pdfError}</p>}
+        <Button
+          variant="secondary"
+          fullWidth
+          disabled={!pdfReady}
+          onClick={() => setShareSheetOpen(true)}
+        >
+          <Share2 className="h-4 w-4" />
+          Share bill
+        </Button>
 
         <div className="mt-4 flex w-full flex-col gap-2">
           <Button fullWidth size="lg" onClick={startNewBill}>
@@ -225,6 +237,14 @@ export default function NewBill() {
             Back to home
           </Button>
         </div>
+
+        <ShareSheet
+          open={shareSheetOpen}
+          onClose={() => setShareSheetOpen(false)}
+          title={success.billNumber}
+          onDownload={handleDownload}
+          getLink={handleGetLink}
+        />
       </div>
     )
   }

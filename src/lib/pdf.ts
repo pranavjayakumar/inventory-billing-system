@@ -1,5 +1,6 @@
 import { jsPDF } from 'jspdf'
 import autoTable from 'jspdf-autotable'
+import { supabase } from './supabase'
 import type { Bill, BillItem, ShopSettings } from '../types/db'
 
 const MARGIN = 40
@@ -104,33 +105,40 @@ export function generateBillPdf(bill: Bill, items: BillItem[], shop: ShopSetting
   return doc
 }
 
-const SHARE_TIMEOUT_MS = 15000
-
-export function canSharePdfFiles(): boolean {
-  return !!navigator.canShare?.({ files: [new File([], 'test.pdf', { type: 'application/pdf' })] })
+export function downloadPdf(doc: jsPDF, filename: string): void {
+  doc.save(filename)
 }
 
-export async function shareOrDownloadPdf(doc: jsPDF, filename: string): Promise<'shared' | 'downloaded'> {
+/**
+ * Uploads the PDF keyed by the bill's UUID (not its human-readable bill_number)
+ * so public URLs aren't sequentially guessable — every historical bill would
+ * otherwise be trivially enumerable via INV-0001.pdf, INV-0002.pdf, etc.
+ */
+export async function uploadBillPdf(doc: jsPDF, billId: string): Promise<string> {
   const blob = doc.output('blob')
-  const file = new File([blob], filename, { type: 'application/pdf' })
+  const path = `${billId}.pdf`
+  const { error } = await supabase.storage
+    .from('bills')
+    .upload(path, blob, { contentType: 'application/pdf', upsert: true })
+  if (error) throw error
 
-  if (canSharePdfFiles()) {
-    try {
-      await Promise.race([
-        navigator.share({ files: [file], title: filename }),
-        new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Share timed out')), SHARE_TIMEOUT_MS),
-        ),
-      ])
-      return 'shared'
-    } catch (err) {
-      if (err instanceof Error && err.name === 'AbortError') {
-        return 'shared'
-      }
-      // fall through to download on timeout or any other share failure
-    }
-  }
+  const { data } = supabase.storage.from('bills').getPublicUrl(path)
+  return data.publicUrl
+}
 
-  doc.save(filename)
-  return 'downloaded'
+export async function copyToClipboard(text: string): Promise<void> {
+  await navigator.clipboard.writeText(text)
+}
+
+const SHARE_TIMEOUT_MS = 15000
+
+export function canShareLink(): boolean {
+  return 'share' in navigator
+}
+
+export async function shareLink(url: string, title: string): Promise<void> {
+  await Promise.race([
+    navigator.share({ url, title }),
+    new Promise((_, reject) => setTimeout(() => reject(new Error('Share timed out')), SHARE_TIMEOUT_MS)),
+  ])
 }
