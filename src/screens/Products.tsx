@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import ProductCard from '../components/ProductCard'
 import Button from '../components/ui/Button'
+import { normalizeCategory } from '../lib/category'
 import { useProducts } from '../lib/queries/products'
 
 export default function Products() {
@@ -22,7 +23,7 @@ export default function Products() {
 
     const groups = new Map<string, typeof filtered>()
     for (const product of filtered) {
-      const key = product.category?.trim() || 'Other'
+      const key = normalizeCategory(product.category) || 'Other'
       if (!groups.has(key)) groups.set(key, [])
       groups.get(key)!.push(product)
     }

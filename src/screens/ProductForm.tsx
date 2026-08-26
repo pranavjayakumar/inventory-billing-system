@@ -1,11 +1,12 @@
 import { ArrowLeft, Plus, Trash2 } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import Switch from '../components/Switch'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import TextField from '../components/ui/TextField'
-import { useProduct, useSaveProduct, type VariantInput } from '../lib/queries/products'
+import { normalizeCategory } from '../lib/category'
+import { useProduct, useProducts, useSaveProduct, type VariantInput } from '../lib/queries/products'
 
 interface VariantRow {
   key: string
@@ -33,7 +34,17 @@ export default function ProductForm() {
   const isEditing = !!id
   const navigate = useNavigate()
   const { data: product, isLoading } = useProduct(id)
+  const { data: allProducts } = useProducts()
   const saveProduct = useSaveProduct()
+
+  const existingCategories = useMemo(() => {
+    const set = new Set<string>()
+    for (const p of allProducts ?? []) {
+      const c = normalizeCategory(p.category)
+      if (c) set.add(c)
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b))
+  }, [allProducts])
 
   const [name, setName] = useState('')
   const [category, setCategory] = useState('')
@@ -117,7 +128,7 @@ export default function ProductForm() {
       {
         id,
         name: name.trim(),
-        category: category.trim() || null,
+        category: normalizeCategory(category) || null,
         image_url: imageUrl.trim() || null,
         variants: parsedVariants,
       },
@@ -161,7 +172,13 @@ export default function ProductForm() {
             value={category}
             onChange={(e) => setCategory(e.target.value)}
             placeholder="Tea"
+            list="category-suggestions"
           />
+          <datalist id="category-suggestions">
+            {existingCategories.map((c) => (
+              <option key={c} value={c} />
+            ))}
+          </datalist>
           <TextField
             label="Image URL (optional)"
             value={imageUrl}
