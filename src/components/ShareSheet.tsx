@@ -70,7 +70,7 @@ export default function ShareSheet({ open, onClose, title, onDownload, getLink }
             role="dialog"
             aria-modal="true"
             aria-label={title}
-            className="w-full max-w-[480px] rounded-t-2xl bg-surface p-2 pb-[env(safe-area-inset-bottom)]"
+            className="w-full max-w-[480px] rounded-t-2xl bg-surface p-2 pb-[calc(1rem+env(safe-area-inset-bottom))]"
           >
             <div className="flex flex-col gap-0.5 p-1">
               <SheetAction icon={Download} label="Download PDF" onClick={onDownload} />

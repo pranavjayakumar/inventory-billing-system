@@ -45,7 +45,7 @@ export default function ConfirmDialog({
             role="alertdialog"
             aria-modal="true"
             aria-labelledby="confirm-dialog-title"
-            className="w-full max-w-[480px] rounded-t-2xl bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))]"
+            className="w-full max-w-[480px] rounded-t-2xl bg-surface p-5 pb-[calc(1.75rem+env(safe-area-inset-bottom))]"
           >
             <h2 id="confirm-dialog-title" className="font-heading text-base font-semibold">
               {title}
