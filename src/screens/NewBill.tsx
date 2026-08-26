@@ -1,5 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { CheckCircle2, Package, Search, ShoppingCart, Trash2, X } from 'lucide-react'
+import {
+  CheckCircle2,
+  Download,
+  Package,
+  Search,
+  Share2,
+  ShoppingCart,
+  Trash2,
+  X,
+} from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
@@ -8,8 +17,10 @@ import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import TextField from '../components/ui/TextField'
 import { normalizeCategory } from '../lib/category'
-import { useCreateBill } from '../lib/queries/bills'
+import { useBillDetails, useCreateBill } from '../lib/queries/bills'
 import { useProducts } from '../lib/queries/products'
+import { useShopSettings } from '../lib/queries/shopSettings'
+import { canSharePdfFiles, generateBillPdf, shareOrDownloadPdf } from '../lib/pdf'
 import type { ProductWithVariants, Variant } from '../types/db'
 
 interface CartItem {
@@ -27,6 +38,14 @@ export default function NewBill() {
   const createBill = useCreateBill()
   const navigate = useNavigate()
 
+  const [success, setSuccess] = useState<{ billId: string; billNumber: string; total: number } | null>(
+    null,
+  )
+  const { data: billDetails } = useBillDetails(success?.billId)
+  const { data: shopSettings } = useShopSettings()
+  const [pdfStatus, setPdfStatus] = useState<'idle' | 'working' | 'done'>('idle')
+  const [pdfError, setPdfError] = useState<string | null>(null)
+
   const [search, setSearch] = useState('')
   const [category, setCategory] = useState<string | null>(null)
   const [cart, setCart] = useState<CartItem[]>([])
@@ -34,7 +53,6 @@ export default function NewBill() {
   const [customerPhone, setCustomerPhone] = useState('')
   const [discount, setDiscount] = useState('')
   const [error, setError] = useState<string | null>(null)
-  const [success, setSuccess] = useState<{ billNumber: string; total: number } | null>(null)
 
   const BROWSE_LIMIT = 12
 
@@ -133,7 +151,8 @@ export default function NewBill() {
         items: cart.map((item) => ({ variant_id: item.variantId, quantity: item.quantity })),
       },
       {
-        onSuccess: (result) => setSuccess({ billNumber: result.bill_number, total: result.total }),
+        onSuccess: (result) =>
+          setSuccess({ billId: result.bill_id, billNumber: result.bill_number, total: result.total }),
         onError: (err) => setError(err.message),
       },
     )
@@ -146,9 +165,27 @@ export default function NewBill() {
     setDiscount('')
     setError(null)
     setSuccess(null)
+    setPdfStatus('idle')
+    setPdfError(null)
+  }
+
+  async function handlePdfAction() {
+    if (!billDetails || !shopSettings) return
+    setPdfStatus('working')
+    setPdfError(null)
+    try {
+      const doc = generateBillPdf(billDetails, billDetails.bill_items, shopSettings)
+      await shareOrDownloadPdf(doc, `${billDetails.bill_number}.pdf`)
+      setPdfStatus('done')
+    } catch (err) {
+      setPdfError(err instanceof Error ? err.message : 'Could not generate the PDF.')
+      setPdfStatus('idle')
+    }
   }
 
   if (success) {
+    const pdfReady = !!billDetails && !!shopSettings
+    const canWebShare = canSharePdfFiles()
     return (
       <div className="flex min-h-[70vh] flex-col items-center justify-center gap-4 px-6 text-center">
         <motion.div
@@ -165,6 +202,21 @@ export default function NewBill() {
         <p className="font-display text-4xl font-semibold tabular-nums">
           ₹{success.total.toFixed(2)}
         </p>
+
+        <div className="mt-2 flex w-full gap-2">
+          <Button
+            variant="secondary"
+            fullWidth
+            disabled={!pdfReady || pdfStatus === 'working'}
+            onClick={handlePdfAction}
+          >
+            {canWebShare ? <Share2 className="h-4 w-4" /> : <Download className="h-4 w-4" />}
+            {pdfStatus === 'working' ? 'Preparing…' : canWebShare ? 'Share PDF' : 'Download PDF'}
+          </Button>
+        </div>
+        {pdfStatus === 'done' && <p className="text-xs text-cardamom">Ready to send.</p>}
+        {pdfError && <p className="text-xs text-chili">{pdfError}</p>}
+
         <div className="mt-4 flex w-full flex-col gap-2">
           <Button fullWidth size="lg" onClick={startNewBill}>
             New bill

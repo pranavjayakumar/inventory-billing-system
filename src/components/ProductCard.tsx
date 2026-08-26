@@ -4,11 +4,13 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDeleteProduct, useSetProductActive } from '../lib/queries/products'
 import type { ProductWithVariants } from '../types/db'
+import ConfirmDialog from './ConfirmDialog'
 import Button from './ui/Button'
 import Card from './ui/Card'
 
 export default function ProductCard({ product }: { product: ProductWithVariants }) {
   const [expanded, setExpanded] = useState(false)
+  const [confirmDeleteOpen, setConfirmDeleteOpen] = useState(false)
   const navigate = useNavigate()
   const setActive = useSetProductActive()
   const deleteProduct = useDeleteProduct()
@@ -100,16 +102,7 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
                   variant="danger"
                   size="sm"
                   iconOnly
-                  disabled={deleteProduct.isPending}
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        `Delete "${product.name}" and all its variants? This can't be undone.`,
-                      )
-                    ) {
-                      deleteProduct.mutate(product.id)
-                    }
-                  }}
+                  onClick={() => setConfirmDeleteOpen(true)}
                   aria-label="Delete product"
                 >
                   <Trash2 className="h-4 w-4" />
@@ -119,6 +112,19 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
           </motion.div>
         )}
       </AnimatePresence>
+
+      <ConfirmDialog
+        open={confirmDeleteOpen}
+        title={`Delete "${product.name}"?`}
+        description="This removes it and all its variants for good. Bills that already used it are unaffected."
+        confirmLabel="Delete"
+        danger
+        isLoading={deleteProduct.isPending}
+        onCancel={() => setConfirmDeleteOpen(false)}
+        onConfirm={() =>
+          deleteProduct.mutate(product.id, { onSuccess: () => setConfirmDeleteOpen(false) })
+        }
+      />
     </Card>
   )
 }

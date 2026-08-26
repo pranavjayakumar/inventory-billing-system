@@ -1,12 +1,13 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline'
+type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'danger-solid' | 'outline'
 type ButtonSize = 'sm' | 'md' | 'lg'
 
 const variantClasses: Record<ButtonVariant, string> = {
   primary: 'rounded-xl bg-turmeric font-semibold text-surface',
   secondary: 'rounded-lg bg-paper font-medium text-ink',
   danger: 'rounded-lg bg-chili/10 font-medium text-chili',
+  'danger-solid': 'rounded-xl bg-chili font-semibold text-surface',
   outline: 'rounded-xl border border-dashed border-border font-medium text-ink/70',
 }
 

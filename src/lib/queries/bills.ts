@@ -1,5 +1,6 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../supabase'
+import type { Bill, BillItem } from '../../types/db'
 
 export interface CreateBillItemInput {
   variant_id: string
@@ -34,5 +35,25 @@ export function useCreateBill() {
       return (data as CreateBillResult[])[0]
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
+  })
+}
+
+export interface BillWithItems extends Bill {
+  bill_items: BillItem[]
+}
+
+export function useBillDetails(billId: string | undefined) {
+  return useQuery({
+    queryKey: ['bills', billId],
+    queryFn: async (): Promise<BillWithItems> => {
+      const { data, error } = await supabase
+        .from('bills')
+        .select('*, bill_items(*)')
+        .eq('id', billId as string)
+        .single()
+      if (error) throw error
+      return data as BillWithItems
+    },
+    enabled: !!billId,
   })
 }
