@@ -1,0 +1,23 @@
+name: Cleanup old bill PDFs
+
+on:
+  schedule:
+    # 1st of every month at 03:00 UTC. It's a no-op whenever nothing has aged
+    # past the retention window, so this is just a cheap safety net.
+    - cron: '0 3 1 * *'
+  workflow_dispatch: {}
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm ci
+      - run: node scripts/cleanup-bill-pdfs.mjs
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          BILL_PDF_RETENTION_DAYS: ${{ vars.BILL_PDF_RETENTION_DAYS }}

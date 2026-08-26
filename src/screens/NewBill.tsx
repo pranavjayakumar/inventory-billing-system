@@ -1,14 +1,14 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { CheckCircle2, Package, Search, Share2, ShoppingCart, Trash2, X } from 'lucide-react'
+import { CheckCircle2, Package, Plus, Share2, ShoppingCart, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
+import ProductPicker from '../components/ProductPicker'
 import QuantityStepper from '../components/QuantityStepper'
 import ShareSheet from '../components/ShareSheet'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import TextField from '../components/ui/TextField'
-import { normalizeCategory } from '../lib/category'
 import { downloadPdf, generateBillPdf, uploadBillPdf } from '../lib/pdf'
 import { useBillDetails, useCreateBill } from '../lib/queries/bills'
 import { useProducts } from '../lib/queries/products'
@@ -36,16 +36,13 @@ export default function NewBill() {
   const { data: billDetails } = useBillDetails(success?.billId)
   const { data: shopSettings } = useShopSettings()
   const [shareSheetOpen, setShareSheetOpen] = useState(false)
+  const [pickerOpen, setPickerOpen] = useState(false)
 
-  const [search, setSearch] = useState('')
-  const [category, setCategory] = useState<string | null>(null)
   const [cart, setCart] = useState<CartItem[]>([])
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
   const [discount, setDiscount] = useState('')
   const [error, setError] = useState<string | null>(null)
-
-  const BROWSE_LIMIT = 12
 
   const allSellableProducts = useMemo(
     () =>
@@ -55,29 +52,6 @@ export default function NewBill() {
         .filter((p) => p.variants.length > 0),
     [products],
   )
-
-  const categories = useMemo(() => {
-    const set = new Set<string>()
-    for (const p of allSellableProducts) set.add(normalizeCategory(p.category) || 'Other')
-    return Array.from(set).sort((a, b) => (a === 'Other' ? 1 : b === 'Other' ? -1 : a.localeCompare(b)))
-  }, [allSellableProducts])
-
-  const isFiltering = search.trim().length > 0 || category !== null
-
-  const matchingProducts = useMemo(() => {
-    const term = search.trim().toLowerCase()
-    return allSellableProducts.filter((p) => {
-      const inCategory = !category || (normalizeCategory(p.category) || 'Other') === category
-      const matchesTerm =
-        !term ||
-        p.name.toLowerCase().includes(term) ||
-        p.variants.some((v) => v.label.toLowerCase().includes(term))
-      return inCategory && matchesTerm
-    })
-  }, [allSellableProducts, search, category])
-
-  const sellableProducts = isFiltering ? matchingProducts : matchingProducts.slice(0, BROWSE_LIMIT)
-  const hiddenCount = isFiltering ? 0 : Math.max(matchingProducts.length - BROWSE_LIMIT, 0)
 
   const cartQtyByVariant = useMemo(
     () => new Map(cart.map((item) => [item.variantId, item.quantity])),
@@ -253,53 +227,6 @@ export default function NewBill() {
     <div className="px-4 py-6 pb-24">
       <h1 className="font-heading text-xl font-semibold">New bill</h1>
 
-      <div className="mt-4 flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3">
-        <Search className="h-4 w-4 shrink-0 text-ink/40" />
-        <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search products or variants"
-          autoFocus
-          className="w-full bg-transparent text-sm outline-none placeholder:text-ink/40"
-        />
-        {search && (
-          <button
-            type="button"
-            onClick={() => setSearch('')}
-            aria-label="Clear search"
-            className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-border/60 text-ink/60"
-          >
-            <X className="h-3.5 w-3.5" />
-          </button>
-        )}
-      </div>
-
-      {categories.length > 1 && (
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          <button
-            type="button"
-            onClick={() => setCategory(null)}
-            className={`h-8 shrink-0 rounded-full px-3 text-xs font-medium ${
-              category === null ? 'bg-turmeric text-surface' : 'bg-surface text-ink/60 border border-border'
-            }`}
-          >
-            All
-          </button>
-          {categories.map((c) => (
-            <button
-              key={c}
-              type="button"
-              onClick={() => setCategory(category === c ? null : c)}
-              className={`h-8 shrink-0 rounded-full px-3 text-xs font-medium ${
-                category === c ? 'bg-turmeric text-surface' : 'bg-surface text-ink/60 border border-border'
-              }`}
-            >
-              {c}
-            </button>
-          ))}
-        </div>
-      )}
-
       {isLoading && (
         <div className="mt-4 flex flex-col gap-3">
           {[0, 1, 2].map((i) => (
@@ -308,7 +235,7 @@ export default function NewBill() {
         </div>
       )}
 
-      {!isLoading && sellableProducts.length === 0 && (products?.length ?? 0) === 0 && (
+      {!isLoading && allSellableProducts.length === 0 && (
         <EmptyState
           icon={Package}
           title="No products yet"
@@ -321,48 +248,11 @@ export default function NewBill() {
         />
       )}
 
-      {!isLoading && sellableProducts.length === 0 && (products?.length ?? 0) > 0 && (
-        <p className="mt-6 text-center text-sm text-ink/50">
-          {search ? `No products match "${search}".` : 'No products in this category.'}
-        </p>
-      )}
-
-      {!isLoading && sellableProducts.length > 0 && (
-        <div className="mt-4 flex flex-col gap-3">
-          {sellableProducts.map((product) => (
-            <div key={product.id}>
-              <p className="mb-1.5 text-xs font-medium text-ink/50">{product.name}</p>
-              <div className="flex flex-wrap gap-2">
-                {product.variants.map((variant) => {
-                  const qty = cartQtyByVariant.get(variant.id) ?? 0
-                  return (
-                    <button
-                      key={variant.id}
-                      type="button"
-                      onClick={() => addToCart(product, variant)}
-                      className="relative flex min-h-11 flex-col items-start rounded-lg border border-border bg-surface px-3 py-1.5 text-left transition-transform active:scale-95"
-                    >
-                      {qty > 0 && (
-                        <span className="absolute -right-1.5 -top-1.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-turmeric px-1 text-[10px] font-semibold text-surface">
-                          {qty}
-                        </span>
-                      )}
-                      <span className="text-sm font-medium">{variant.label}</span>
-                      <span className="text-xs text-ink/50">₹{variant.unit_price.toFixed(2)}</span>
-                    </button>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-
-      {hiddenCount > 0 && (
-        <p className="mt-3 text-center text-xs text-ink/40">
-          Showing {sellableProducts.length} of {matchingProducts.length} products — search or pick a
-          category to see more
-        </p>
+      {!isLoading && allSellableProducts.length > 0 && (
+        <Button variant="outline" size="lg" fullWidth className="mt-4" onClick={() => setPickerOpen(true)}>
+          <Plus className="h-4 w-4" />
+          Add items
+        </Button>
       )}
 
       <div className="mt-6">
@@ -372,7 +262,7 @@ export default function NewBill() {
         </h2>
 
         {cart.length === 0 ? (
-          <p className="text-sm text-ink/50">Tap a product above to add it to this bill.</p>
+          <p className="text-sm text-ink/50">Tap "Add items" above to start this bill.</p>
         ) : (
           <div className="flex flex-col gap-2">
             <AnimatePresence initial={false}>
@@ -485,6 +375,15 @@ export default function NewBill() {
       >
         {createBill.isPending ? 'Generating…' : 'Generate bill'}
       </Button>
+
+      <ProductPicker
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        products={allSellableProducts}
+        cartQtyByVariant={cartQtyByVariant}
+        onAddToCart={addToCart}
+        cartCount={cart.length}
+      />
     </div>
   )
 }
