@@ -81,7 +81,7 @@ export default function Home() {
 
   if (!isLoading && !hasAnyBills) {
     return (
-      <div className="px-4 py-6 pb-40">
+      <div className="px-4 py-6 pb-8">
         <h1 className="font-heading text-xl font-semibold">Home</h1>
         <EmptyState
           icon={TrendingUp}
@@ -94,7 +94,7 @@ export default function Home() {
   }
 
   return (
-    <div className="px-4 py-6 pb-40">
+    <div className="px-4 py-6 pb-8">
       <h1 className="font-heading text-xl font-semibold">Home</h1>
 
       {isLoading ? (

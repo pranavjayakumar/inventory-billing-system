@@ -40,7 +40,7 @@ export default function Products() {
   const hasAnyProducts = (products?.length ?? 0) > 0
 
   return (
-    <div className="px-4 py-6 pb-60">
+    <div className="px-4 py-6 pb-28">
       <h1 className="font-heading text-xl font-semibold">Products</h1>
 
       {hasAnyProducts && (

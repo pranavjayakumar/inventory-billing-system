@@ -70,7 +70,7 @@ export default function Customers() {
   }
 
   return (
-    <div className="px-4 py-6 pb-40">
+    <div className="px-4 py-6 pb-10">
       <h1 className="font-heading text-xl font-semibold">Customers</h1>
 
       {addOpen && (

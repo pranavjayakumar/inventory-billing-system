@@ -1,2 +1,0 @@
-- Add owner name in the billing
-- Stock hanlding
