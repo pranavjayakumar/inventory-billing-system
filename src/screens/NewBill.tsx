@@ -426,7 +426,7 @@ export default function NewBill() {
   const paymentLabel = paymentStatus === 'due' ? 'On credit' : 'Paid now';
 
   return (
-    <div className="px-4 py-6 pb-48">
+    <div className="px-4 py-6 pb-28">
       <h1 className='font-heading text-xl font-semibold'>New bill</h1>
 
       {isLoading && (
