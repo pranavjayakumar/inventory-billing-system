@@ -1,4 +1,4 @@
-# Kirana Billing
+# Aniyathi Mart
 
 A mobile-first billing and inventory app for a small grocery/general store. React + Vite + TypeScript + Tailwind, Supabase (Postgres) as the backend, PDFs generated client-side.
 

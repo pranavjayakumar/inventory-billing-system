@@ -1,4 +1,4 @@
--- Kirana Billing: rate-priced products and non-bill stock changes.
+-- Aniyathi Mart: rate-priced products and non-bill stock changes.
 -- See PROJECT_SPEC_V2.md, Phase 9 (revised): pricing modes and
 -- Phase 10 (revised): stock handling. Run after 0004_customers_credit_cost.sql.
 

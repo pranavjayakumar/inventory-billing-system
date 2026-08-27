@@ -1,4 +1,4 @@
--- Kirana Billing: cost-price snapshots, customers, and credit sales.
+-- Aniyathi Mart: cost-price snapshots, customers, and credit sales.
 -- See PROJECT_SPEC_ADDENDUM.md, Phase 9 (cost price and profit) and
 -- Phase 11 (customers and credit). Run after 0003_bill_pdf_storage.sql.
 

@@ -1,4 +1,4 @@
--- Kirana Billing: grant table/sequence/function access to the anon role.
+-- Aniyathi Mart: grant table/sequence/function access to the anon role.
 -- RLS is intentionally off in v1 (no auth yet, see build plan section 9),
 -- so these grants are the only access gate. Run after 0001_init.sql.
 

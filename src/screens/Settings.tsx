@@ -27,7 +27,7 @@ export default function Settings() {
     setOwnerName(shopSettings.owner_name ?? '')
     setAddress(shopSettings.address ?? '')
     setPhone(shopSettings.phone ?? '')
-    setLogoUrl(shopSettings.logo_url ?? '')
+    setLogoUrl(shopSettings.logo_url ?? '/favicon.png')
   }, [shopSettings])
 
   function handleSubmit(e: React.FormEvent) {
@@ -81,7 +81,7 @@ export default function Settings() {
             label="Shop name"
             value={shopName}
             onChange={(e) => setShopName(e.target.value)}
-            placeholder="My Shop"
+            placeholder="Aniyathi Mart"
           />
           <TextField
             label="Owner name (optional)"
@@ -107,7 +107,7 @@ export default function Settings() {
             label="Logo URL (optional)"
             value={logoUrl}
             onChange={(e) => setLogoUrl(e.target.value)}
-            placeholder="https://…"
+            placeholder="/favicon.png"
           />
         </Card>
 
