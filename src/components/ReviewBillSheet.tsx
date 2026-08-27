@@ -46,7 +46,7 @@ export default function ReviewBillSheet({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
-          className='fixed inset-0 z-150 flex items-end justify-center bg-ink/40'
+          className="fixed inset-0 z-50 flex items-end justify-center bg-ink/40"
           onClick={onEdit}>
           <motion.div
             initial={{ y: 24, opacity: 0, scale: 0.98 }}

@@ -1,5 +1,6 @@
 import { Boxes, Package, Plus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import ProductCard from '../components/ProductCard'
@@ -39,18 +40,8 @@ export default function Products() {
   const hasAnyProducts = (products?.length ?? 0) > 0
 
   return (
-    <div className="px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading text-xl font-semibold">Products</h1>
-        <button
-          type="button"
-          onClick={() => navigate('/stock')}
-          aria-label="Stock"
-          className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-ink/70"
-        >
-          <Boxes className="h-5 w-5" />
-        </button>
-      </div>
+    <div className="px-4 py-6 pb-60">
+      <h1 className="font-heading text-xl font-semibold">Products</h1>
 
       {hasAnyProducts && (
         <div className="mt-4 flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3">
@@ -112,6 +103,20 @@ export default function Products() {
           ))}
         </div>
       )}
+
+      {hasAnyProducts &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => navigate('/stock')}
+            aria-label="Stock"
+            className="fixed bottom-44 z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-ink/70 shadow-lg shadow-ink/10 transition-transform active:scale-95"
+            style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1.25rem))' }}
+          >
+            <Boxes className="h-5 w-5" />
+          </button>,
+          document.body,
+        )}
     </div>
   )
 }

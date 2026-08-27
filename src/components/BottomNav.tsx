@@ -1,8 +1,8 @@
 import { motion } from 'framer-motion';
 import {
+  FilePlus,
   Home,
   Package,
-  Plus,
   Receipt,
   Users,
   type LucideIcon,
@@ -40,9 +40,9 @@ export default function BottomNav() {
           to='/bill/new'
           className={`relative -top-5 ${FAB_CLASSNAME}`}
           aria-label='New bill'>
-          <Plus
-            className='h-7 w-7'
-            strokeWidth={2.5}
+          <FilePlus
+            className="h-6 w-6"
+            strokeWidth={2.25}
           />
         </NavLink>
 

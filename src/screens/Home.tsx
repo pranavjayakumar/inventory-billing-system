@@ -1,5 +1,6 @@
 import { AlertTriangle, Receipt, Settings, TrendingUp } from 'lucide-react'
 import { useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import BillRow from '../components/BillRow'
 import EmptyState from '../components/EmptyState'
@@ -65,42 +66,36 @@ export default function Home() {
 
   const hasAnyBills = (bills?.length ?? 0) > 0
 
+  const settingsFab = createPortal(
+    <button
+      type="button"
+      onClick={() => navigate('/settings')}
+      aria-label="Settings"
+      className="fixed bottom-24 z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-ink/70 shadow-lg shadow-ink/10 transition-transform active:scale-95"
+      style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1.25rem))' }}
+    >
+      <Settings className="h-5 w-5" />
+    </button>,
+    document.body,
+  )
+
   if (!isLoading && !hasAnyBills) {
     return (
-      <div className="px-4 py-6">
-        <div className="flex items-center justify-between">
-          <h1 className="font-heading text-xl font-semibold">Home</h1>
-          <button
-            type="button"
-            onClick={() => navigate('/settings')}
-            aria-label="Settings"
-            className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-ink/70"
-          >
-            <Settings className="h-5 w-5" />
-          </button>
-        </div>
+      <div className="px-4 py-6 pb-40">
+        <h1 className="font-heading text-xl font-semibold">Home</h1>
         <EmptyState
           icon={TrendingUp}
           title="No sales yet"
           description="Once you generate your first bill, today's sales and trends will show up here."
         />
+        {settingsFab}
       </div>
     )
   }
 
   return (
-    <div className="px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading text-xl font-semibold">Home</h1>
-        <button
-          type="button"
-          onClick={() => navigate('/settings')}
-          aria-label="Settings"
-          className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-ink/70"
-        >
-          <Settings className="h-5 w-5" />
-        </button>
-      </div>
+    <div className="px-4 py-6 pb-40">
+      <h1 className="font-heading text-xl font-semibold">Home</h1>
 
       {isLoading ? (
         <div className="mt-4 flex flex-col gap-3">
@@ -196,6 +191,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      {settingsFab}
     </div>
   )
 }

@@ -31,7 +31,7 @@ export default function BillDetail() {
   }
 
   return (
-    <div className="px-4 py-6 pb-28">
+    <div className="px-4 py-6 pb-48">
       <div className="flex items-center gap-3">
         <button
           type="button"
