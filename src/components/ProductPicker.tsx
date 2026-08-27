@@ -13,8 +13,9 @@ interface ProductPickerProps {
   onClose: () => void
   products: ProductWithVariants[]
   cartQtyByVariant: Map<string, number>
+  cartQtyByProduct: Map<string, number>
   onAddToCart: (product: ProductWithVariants, variant: Variant) => void
-  onAddRateToCart: (product: ProductWithVariants, quantity: number, label: string) => void
+  onAddRateToCart: (product: ProductWithVariants, quantity: number) => void
   cartCount: number
 }
 
@@ -23,6 +24,7 @@ export default function ProductPicker({
   onClose,
   products,
   cartQtyByVariant,
+  cartQtyByProduct,
   onAddToCart,
   onAddRateToCart,
   cartCount,
@@ -61,9 +63,9 @@ export default function ProductPicker({
     onClose()
   }
 
-  function handleAddRate(quantity: number, label: string) {
+  function handleAddRate(quantity: number) {
     if (!rateProduct) return
-    onAddRateToCart(rateProduct, quantity, label)
+    onAddRateToCart(rateProduct, quantity)
     setRateProduct(null)
   }
 
@@ -166,18 +168,41 @@ export default function ProductPicker({
                   <div className="mt-4 flex flex-col gap-3">
                     {visibleProducts.map((product) => (
                       <div key={product.id}>
-                        <p className="mb-1.5 text-xs font-medium text-ink/70">{product.name}</p>
-                        {product.pricing_mode === 'rate' ? (
-                          <button
-                            type="button"
-                            onClick={() => setRateProduct(product)}
-                            className="flex min-h-11 w-full items-center justify-between rounded-lg border border-border bg-surface px-3 py-1.5 text-left transition-transform active:scale-95"
-                          >
-                            <span className="text-sm font-medium">Enter quantity</span>
-                            <span className="text-xs text-ink/70">
-                              ₹{(product.rate_sell_price ?? 0).toFixed(2)} / {product.rate_unit}
+                        <p className="mb-1.5 flex items-center gap-1.5 text-xs font-medium text-ink/70">
+                          {product.name}
+                          {(cartQtyByProduct.get(product.id) ?? 0) > 0 && (
+                            <span className="rounded-full bg-turmeric px-1.5 py-0.5 text-[10px] font-semibold text-surface">
+                              {cartQtyByProduct.get(product.id)}
+                              {product.rate_unit} in cart
                             </span>
-                          </button>
+                          )}
+                        </p>
+                        {product.pricing_mode === 'rate' ? (
+                          <div className="flex flex-wrap gap-2">
+                            {(product.rate_quick_picks ?? []).map((pick) => (
+                              <button
+                                key={pick}
+                                type="button"
+                                onClick={() => onAddRateToCart(product, pick)}
+                                className="flex min-h-11 flex-col items-start rounded-lg border border-border bg-surface px-3 py-1.5 text-left transition-transform active:scale-95"
+                              >
+                                <span className="text-sm font-medium">
+                                  {pick}
+                                  {product.rate_unit}
+                                </span>
+                                <span className="text-xs text-ink/70">
+                                  ₹{((product.rate_sell_price ?? 0) * pick).toFixed(2)}
+                                </span>
+                              </button>
+                            ))}
+                            <button
+                              type="button"
+                              onClick={() => setRateProduct(product)}
+                              className="flex min-h-11 items-center rounded-lg border border-dashed border-border px-3 py-1.5 text-left text-xs font-medium text-ink/70 transition-transform active:scale-95"
+                            >
+                              Other amount
+                            </button>
+                          </div>
                         ) : (
                           <div className="flex flex-wrap gap-2">
                             {product.variants.map((variant) => {
@@ -237,7 +262,7 @@ function RateQuantityEntry({
 }: {
   product: ProductWithVariants
   onBack: () => void
-  onAdd: (quantity: number, label: string) => void
+  onAdd: (quantity: number) => void
 }) {
   const [quantity, setQuantity] = useState('')
   const unit = product.rate_unit ?? ''
@@ -246,13 +271,9 @@ function RateQuantityEntry({
   const valid = quantity !== '' && !Number.isNaN(qtyNum) && qtyNum > 0
   const price = valid ? rate * qtyNum : 0
 
-  function handleQuickPick(value: number) {
-    setQuantity(String(value))
-  }
-
   function handleAdd() {
     if (!valid) return
-    onAdd(qtyNum, `${qtyNum}${unit}`)
+    onAdd(qtyNum)
   }
 
   return (
@@ -271,26 +292,6 @@ function RateQuantityEntry({
 
       <div className="flex-1 overflow-y-auto px-4 py-4">
         <p className="text-sm text-ink/70">₹{rate.toFixed(2)} per {unit}</p>
-
-        {product.rate_quick_picks && product.rate_quick_picks.length > 0 && (
-          <div className="mt-3 flex flex-wrap gap-2">
-            {product.rate_quick_picks.map((pick) => (
-              <button
-                key={pick}
-                type="button"
-                onClick={() => handleQuickPick(pick)}
-                className={`h-10 shrink-0 rounded-full px-4 text-sm font-medium ${
-                  quantity === String(pick)
-                    ? 'bg-turmeric text-surface'
-                    : 'border border-border bg-surface text-ink/70'
-                }`}
-              >
-                {pick}
-                {unit}
-              </button>
-            ))}
-          </div>
-        )}
 
         <label className="mt-4 flex flex-col gap-1">
           <span className="text-xs font-medium text-ink/70">Quantity ({unit})</span>

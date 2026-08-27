@@ -20,6 +20,10 @@ import { useProducts } from '../lib/queries/products'
 import { useShopSettings } from '../lib/queries/shopSettings'
 import type { PaymentStatus, ProductWithVariants, Variant } from '../types/db'
 
+function roundQty(n: number): number {
+  return Math.round(n * 1000) / 1000
+}
+
 interface CartItem {
   key: string
   kind: 'variant' | 'rate'
@@ -71,6 +75,12 @@ export default function NewBill() {
     [cart],
   )
 
+  const cartQtyByProduct = useMemo(
+    () =>
+      new Map(cart.filter((item) => item.kind === 'rate').map((item) => [item.productId, item.quantity])),
+    [cart],
+  )
+
   function addToCart(product: ProductWithVariants, variant: Variant) {
     setCart((prev) => {
       const existing = prev.find((item) => item.variantId === variant.id)
@@ -97,21 +107,31 @@ export default function NewBill() {
     })
   }
 
-  function addRateToCart(product: ProductWithVariants, quantity: number, label: string) {
-    setCart((prev) => [
-      ...prev,
-      {
-        key: crypto.randomUUID(),
-        kind: 'rate',
-        productId: product.id,
-        productName: product.name,
-        label,
-        unitPrice: product.rate_sell_price ?? 0,
-        quantity,
-        trackStock: product.track_stock,
-        currentStock: product.current_stock,
-      },
-    ])
+  function addRateToCart(product: ProductWithVariants, quantity: number) {
+    const unit = product.rate_unit ?? ''
+    setCart((prev) => {
+      const existing = prev.find((item) => item.kind === 'rate' && item.productId === product.id)
+      if (existing) {
+        const newQty = roundQty(existing.quantity + quantity)
+        return prev.map((item) =>
+          item.key === existing.key ? { ...item, quantity: newQty, label: `${newQty}${unit}` } : item,
+        )
+      }
+      return [
+        ...prev,
+        {
+          key: product.id,
+          kind: 'rate',
+          productId: product.id,
+          productName: product.name,
+          label: `${quantity}${unit}`,
+          unitPrice: product.rate_sell_price ?? 0,
+          quantity,
+          trackStock: product.track_stock,
+          currentStock: product.current_stock,
+        },
+      ]
+    })
   }
 
   function setQuantity(key: string, quantity: number) {
@@ -589,6 +609,7 @@ export default function NewBill() {
         onClose={() => setPickerOpen(false)}
         products={allSellableProducts}
         cartQtyByVariant={cartQtyByVariant}
+        cartQtyByProduct={cartQtyByProduct}
         onAddToCart={addToCart}
         onAddRateToCart={addRateToCart}
         cartCount={cart.length}
