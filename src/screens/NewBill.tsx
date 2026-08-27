@@ -19,9 +19,12 @@ import { useShopSettings } from '../lib/queries/shopSettings'
 import type { ProductWithVariants, Variant } from '../types/db'
 
 interface CartItem {
-  variantId: string
+  key: string
+  kind: 'variant' | 'rate'
+  variantId?: string
+  productId: string
   productName: string
-  variantLabel: string
+  label: string
   unitPrice: number
   quantity: number
   trackStock: boolean
@@ -52,12 +55,13 @@ export default function NewBill() {
       (products ?? [])
         .filter((p) => p.is_active)
         .map((p) => ({ ...p, variants: p.variants.filter((v) => v.is_active) }))
-        .filter((p) => p.variants.length > 0),
+        .filter((p) => p.pricing_mode === 'rate' || p.variants.length > 0),
     [products],
   )
 
   const cartQtyByVariant = useMemo(
-    () => new Map(cart.map((item) => [item.variantId, item.quantity])),
+    () =>
+      new Map(cart.filter((item) => item.kind === 'variant').map((item) => [item.variantId!, item.quantity])),
     [cart],
   )
 
@@ -72,9 +76,12 @@ export default function NewBill() {
       return [
         ...prev,
         {
+          key: variant.id,
+          kind: 'variant',
           variantId: variant.id,
+          productId: product.id,
           productName: product.name,
-          variantLabel: variant.label,
+          label: variant.label,
           unitPrice: variant.unit_price,
           quantity: 1,
           trackStock: variant.track_stock,
@@ -84,16 +91,45 @@ export default function NewBill() {
     })
   }
 
-  function setQuantity(variantId: string, quantity: number) {
+  function addRateToCart(product: ProductWithVariants, quantity: number, label: string) {
+    setCart((prev) => [
+      ...prev,
+      {
+        key: crypto.randomUUID(),
+        kind: 'rate',
+        productId: product.id,
+        productName: product.name,
+        label,
+        unitPrice: product.rate_sell_price ?? 0,
+        quantity,
+        trackStock: product.track_stock,
+        currentStock: product.current_stock,
+      },
+    ])
+  }
+
+  function setQuantity(key: string, quantity: number) {
     setCart((prev) =>
       quantity <= 0
-        ? prev.filter((item) => item.variantId !== variantId)
-        : prev.map((item) => (item.variantId === variantId ? { ...item, quantity } : item)),
+        ? prev.filter((item) => item.key !== key)
+        : prev.map((item) => (item.key === key ? { ...item, quantity } : item)),
     )
   }
 
-  function removeFromCart(variantId: string) {
-    setCart((prev) => prev.filter((item) => item.variantId !== variantId))
+  function setRateQuantity(key: string, rawValue: string) {
+    setCart((prev) =>
+      prev.map((item) => {
+        if (item.key !== key) return item
+        const qty = Number(rawValue)
+        if (rawValue === '' || Number.isNaN(qty)) return { ...item, quantity: 0 }
+        const unit = item.label.replace(/^[\d.]+/, '')
+        return { ...item, quantity: qty, label: `${qty}${unit}` }
+      }),
+    )
+  }
+
+  function removeFromCart(key: string) {
+    setCart((prev) => prev.filter((item) => item.key !== key))
   }
 
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
@@ -106,6 +142,10 @@ export default function NewBill() {
       setError('Add at least one item to the bill.')
       return
     }
+    if (cart.some((item) => item.quantity <= 0)) {
+      setError('Every item needs a quantity greater than zero.')
+      return
+    }
     if (discountNum > subtotal) {
       setError("Discount can't be more than the subtotal.")
       return
@@ -113,10 +153,15 @@ export default function NewBill() {
 
     createBill.mutate(
       {
+        customerId: null,
         customerName: customerName.trim() || null,
         customerPhone: customerPhone.trim() || null,
         discount: discountNum,
-        items: cart.map((item) => ({ variant_id: item.variantId, quantity: item.quantity })),
+        items: cart.map((item) =>
+          item.kind === 'variant'
+            ? { variant_id: item.variantId!, quantity: item.quantity }
+            : { product_id: item.productId, quantity: item.quantity, label: item.label },
+        ),
       },
       {
         onSuccess: (result) =>
@@ -252,7 +297,7 @@ export default function NewBill() {
                   item.trackStock && item.currentStock != null && item.quantity > item.currentStock
                 return (
                   <motion.div
-                    key={item.variantId}
+                    key={item.key}
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, x: -12 }}
@@ -262,7 +307,7 @@ export default function NewBill() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="min-w-0">
                           <p className="truncate text-sm font-medium">
-                            {item.productName} ({item.variantLabel})
+                            {item.productName} ({item.label})
                           </p>
                           <p className="text-xs text-ink/70 tabular-nums">
                             ₹{item.unitPrice.toFixed(2)} each
@@ -270,7 +315,7 @@ export default function NewBill() {
                         </div>
                         <button
                           type="button"
-                          onClick={() => removeFromCart(item.variantId)}
+                          onClick={() => removeFromCart(item.key)}
                           aria-label="Remove item"
                           className="-m-1.5 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg text-ink/70"
                         >
@@ -278,10 +323,22 @@ export default function NewBill() {
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
-                        <QuantityStepper
-                          value={item.quantity}
-                          onChange={(qty) => setQuantity(item.variantId, qty)}
-                        />
+                        {item.kind === 'variant' ? (
+                          <QuantityStepper
+                            value={item.quantity}
+                            onChange={(qty) => setQuantity(item.key, qty)}
+                          />
+                        ) : (
+                          <input
+                            value={item.quantity === 0 ? '' : String(item.quantity)}
+                            onChange={(e) => setRateQuantity(item.key, e.target.value)}
+                            type="number"
+                            inputMode="decimal"
+                            step="0.001"
+                            min="0"
+                            className="h-11 w-24 rounded-lg border border-border bg-paper px-3 text-base outline-none focus:border-turmeric"
+                          />
+                        )}
                         <span className="text-sm font-semibold tabular-nums">
                           ₹{(item.unitPrice * item.quantity).toFixed(2)}
                         </span>
@@ -367,6 +424,7 @@ export default function NewBill() {
         products={allSellableProducts}
         cartQtyByVariant={cartQtyByVariant}
         onAddToCart={addToCart}
+        onAddRateToCart={addRateToCart}
         cartCount={cart.length}
       />
     </div>

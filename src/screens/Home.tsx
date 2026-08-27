@@ -5,7 +5,7 @@ import BillRow from '../components/BillRow'
 import EmptyState from '../components/EmptyState'
 import Card from '../components/ui/Card'
 import { useBills } from '../lib/queries/bills'
-import { useTopProducts } from '../lib/queries/dashboard'
+import { useProfitSummary, useTopProducts } from '../lib/queries/dashboard'
 import { useProducts } from '../lib/queries/products'
 
 function isToday(iso: string): boolean {
@@ -23,8 +23,9 @@ export default function Home() {
   const { data: bills, isLoading: billsLoading } = useBills()
   const { data: topProducts, isLoading: topLoading } = useTopProducts(30)
   const { data: products, isLoading: productsLoading } = useProducts()
+  const { data: profit, isLoading: profitLoading } = useProfitSummary()
 
-  const isLoading = billsLoading || topLoading || productsLoading
+  const isLoading = billsLoading || topLoading || productsLoading || profitLoading
 
   const { todayTotal, weekTotal, monthTotal } = useMemo(() => {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -89,6 +90,9 @@ export default function Home() {
             <p className="mt-1 font-display text-5xl font-semibold tabular-nums">
               ₹{todayTotal.toFixed(2)}
             </p>
+            <p className="mt-1 text-sm text-cardamom tabular-nums">
+              ₹{(profit?.today ?? 0).toFixed(2)} profit
+            </p>
           </Card>
 
           <div className="grid grid-cols-2 gap-3">
@@ -97,11 +101,17 @@ export default function Home() {
               <p className="mt-1 font-heading text-lg font-semibold tabular-nums">
                 ₹{weekTotal.toFixed(2)}
               </p>
+              <p className="mt-0.5 text-xs text-cardamom tabular-nums">
+                ₹{(profit?.week ?? 0).toFixed(2)} profit
+              </p>
             </Card>
             <Card className="p-4">
               <p className="text-xs text-ink/70">Last 30 days</p>
               <p className="mt-1 font-heading text-lg font-semibold tabular-nums">
                 ₹{monthTotal.toFixed(2)}
+              </p>
+              <p className="mt-0.5 text-xs text-cardamom tabular-nums">
+                ₹{(profit?.month ?? 0).toFixed(2)} profit
               </p>
             </Card>
           </div>

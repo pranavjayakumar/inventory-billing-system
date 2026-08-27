@@ -1,6 +1,57 @@
 import { useQuery } from '@tanstack/react-query'
 import { supabase } from '../supabase'
 
+function isToday(iso: string): boolean {
+  const d = new Date(iso)
+  const now = new Date()
+  return (
+    d.getFullYear() === now.getFullYear() &&
+    d.getMonth() === now.getMonth() &&
+    d.getDate() === now.getDate()
+  )
+}
+
+export interface ProfitSummary {
+  today: number
+  week: number
+  month: number
+}
+
+interface ProfitRow {
+  unit_price_snapshot: number
+  cost_price_snapshot: number | null
+  quantity: number
+  bills: { created_at: string } | { created_at: string }[]
+}
+
+export function useProfitSummary() {
+  return useQuery({
+    queryKey: ['bill-items', 'profit-summary'],
+    queryFn: async (): Promise<ProfitSummary> => {
+      const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
+      const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
+      const { data, error } = await supabase
+        .from('bill_items')
+        .select('unit_price_snapshot, cost_price_snapshot, quantity, bills!inner(created_at)')
+        .gte('bills.created_at', thirtyDaysAgo)
+      if (error) throw error
+
+      let today = 0
+      let week = 0
+      let month = 0
+      for (const item of (data ?? []) as unknown as ProfitRow[]) {
+        if (item.cost_price_snapshot == null) continue
+        const bill = Array.isArray(item.bills) ? item.bills[0] : item.bills
+        const profit = (item.unit_price_snapshot - item.cost_price_snapshot) * item.quantity
+        month += profit
+        if (new Date(bill.created_at).getTime() >= sevenDaysAgo) week += profit
+        if (isToday(bill.created_at)) today += profit
+      }
+      return { today, week, month }
+    },
+  })
+}
+
 export interface TopProduct {
   key: string
   name: string
