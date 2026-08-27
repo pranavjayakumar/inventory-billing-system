@@ -1,6 +1,2 @@
 - Add owner name in the billing
-- Confirmation when clicking generate bill
-- Stock reduction
-- Stock handling section
-- Buying rate and selling rate
-- quick settle button
+- Stock hanlding
