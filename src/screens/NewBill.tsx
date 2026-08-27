@@ -1,6 +1,6 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ArrowLeft, Package, Plus, Share2, ShoppingCart, Trash2, UserPlus } from 'lucide-react'
-import { useMemo, useState } from 'react'
+import { Package, Share2, ShoppingCart, Trash2, UserPlus } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AnimatedCheckmark from '../components/AnimatedCheckmark'
 import BillSummaryCard from '../components/BillSummaryCard'
@@ -8,10 +8,12 @@ import CustomerPickerSheet from '../components/CustomerPickerSheet'
 import EmptyState from '../components/EmptyState'
 import ProductPicker from '../components/ProductPicker'
 import QuantityStepper from '../components/QuantityStepper'
+import ReviewBillSheet from '../components/ReviewBillSheet'
 import ShareSheet from '../components/ShareSheet'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import ErrorBanner from '../components/ui/ErrorBanner'
+import StickyFooter from '../components/ui/StickyFooter'
 import TextField from '../components/ui/TextField'
 import { downloadPdf, generateBillPdf, uploadBillPdf } from '../lib/pdf'
 import { useBillDetails, useCreateBill } from '../lib/queries/bills'
@@ -29,12 +31,65 @@ interface CartItem {
   kind: 'variant' | 'rate'
   variantId?: string
   productId: string
+  quantity: number
+}
+
+interface ResolvedCartItem extends CartItem {
   productName: string
   label: string
   unitPrice: number
-  quantity: number
   trackStock: boolean
   currentStock: number | null
+}
+
+function resolveCartItem(item: CartItem, products: ProductWithVariants[]): ResolvedCartItem | null {
+  const product = products.find((p) => p.id === item.productId)
+  if (!product) return null
+
+  if (item.kind === 'variant') {
+    const variant = product.variants.find((v) => v.id === item.variantId)
+    if (!variant) return null
+    return {
+      ...item,
+      productName: product.name,
+      label: variant.label,
+      unitPrice: variant.unit_price,
+      trackStock: variant.track_stock,
+      currentStock: variant.current_stock,
+    }
+  }
+
+  return {
+    ...item,
+    productName: product.name,
+    label: `${item.quantity}${product.rate_unit ?? ''}`,
+    unitPrice: product.rate_sell_price ?? 0,
+    trackStock: product.track_stock,
+    currentStock: product.current_stock,
+  }
+}
+
+const DRAFT_KEY = 'newbill-draft'
+const DRAFT_SAVE_DELAY_MS = 400
+
+interface DraftState {
+  cart: CartItem[]
+  customerName: string
+  customerPhone: string
+  selectedCustomer: CustomerWithBalance | null
+  paymentStatus: PaymentStatus
+  discount: string
+}
+
+function readDraft(): DraftState | null {
+  try {
+    const raw = localStorage.getItem(DRAFT_KEY)
+    if (!raw) return null
+    const draft = JSON.parse(raw) as DraftState
+    return draft.cart && draft.cart.length > 0 ? draft : null
+  } catch {
+    return null
+  }
 }
 
 export default function NewBill() {
@@ -51,14 +106,32 @@ export default function NewBill() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [customerPickerOpen, setCustomerPickerOpen] = useState(false)
 
-  const [cart, setCart] = useState<CartItem[]>([])
-  const [customerName, setCustomerName] = useState('')
-  const [customerPhone, setCustomerPhone] = useState('')
-  const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithBalance | null>(null)
-  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('paid')
-  const [discount, setDiscount] = useState('')
+  // Restore an in-progress bill if the tab closed or backgrounded mid-edit.
+  const [draft] = useState(readDraft)
+  const [cart, setCart] = useState<CartItem[]>(() => draft?.cart ?? [])
+  const [customerName, setCustomerName] = useState(() => draft?.customerName ?? '')
+  const [customerPhone, setCustomerPhone] = useState(() => draft?.customerPhone ?? '')
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithBalance | null>(
+    () => draft?.selectedCustomer ?? null,
+  )
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>(() => draft?.paymentStatus ?? 'paid')
+  const [discount, setDiscount] = useState(() => draft?.discount ?? '')
   const [error, setError] = useState<string | null>(null)
   const [reviewing, setReviewing] = useState(false)
+
+  // Debounced draft save while a bill is in progress.
+  useEffect(() => {
+    if (cart.length === 0) return
+    const timeout = setTimeout(() => {
+      const draft: DraftState = { cart, customerName, customerPhone, selectedCustomer, paymentStatus, discount }
+      try {
+        localStorage.setItem(DRAFT_KEY, JSON.stringify(draft))
+      } catch {
+        // Best-effort only.
+      }
+    }, DRAFT_SAVE_DELAY_MS)
+    return () => clearTimeout(timeout)
+  }, [cart, customerName, customerPhone, selectedCustomer, paymentStatus, discount])
 
   const allSellableProducts = useMemo(
     () =>
@@ -67,6 +140,14 @@ export default function NewBill() {
         .map((p) => ({ ...p, variants: p.variants.filter((v) => v.is_active) }))
         .filter((p) => p.pricing_mode === 'rate' || p.variants.length > 0),
     [products],
+  )
+
+  const resolvedCart = useMemo(
+    () =>
+      cart
+        .map((item) => resolveCartItem(item, products ?? []))
+        .filter((item): item is ResolvedCartItem => item !== null),
+    [cart, products],
   )
 
   const cartQtyByVariant = useMemo(
@@ -89,48 +170,19 @@ export default function NewBill() {
           item.variantId === variant.id ? { ...item, quantity: item.quantity + 1 } : item,
         )
       }
-      return [
-        ...prev,
-        {
-          key: variant.id,
-          kind: 'variant',
-          variantId: variant.id,
-          productId: product.id,
-          productName: product.name,
-          label: variant.label,
-          unitPrice: variant.unit_price,
-          quantity: 1,
-          trackStock: variant.track_stock,
-          currentStock: variant.current_stock,
-        },
-      ]
+      return [...prev, { key: variant.id, kind: 'variant', variantId: variant.id, productId: product.id, quantity: 1 }]
     })
   }
 
   function addRateToCart(product: ProductWithVariants, quantity: number) {
-    const unit = product.rate_unit ?? ''
     setCart((prev) => {
       const existing = prev.find((item) => item.kind === 'rate' && item.productId === product.id)
       if (existing) {
-        const newQty = roundQty(existing.quantity + quantity)
         return prev.map((item) =>
-          item.key === existing.key ? { ...item, quantity: newQty, label: `${newQty}${unit}` } : item,
+          item.key === existing.key ? { ...item, quantity: roundQty(item.quantity + quantity) } : item,
         )
       }
-      return [
-        ...prev,
-        {
-          key: product.id,
-          kind: 'rate',
-          productId: product.id,
-          productName: product.name,
-          label: `${quantity}${unit}`,
-          unitPrice: product.rate_sell_price ?? 0,
-          quantity,
-          trackStock: product.track_stock,
-          currentStock: product.current_stock,
-        },
-      ]
+      return [...prev, { key: product.id, kind: 'rate', productId: product.id, quantity }]
     })
   }
 
@@ -148,8 +200,7 @@ export default function NewBill() {
         if (item.key !== key) return item
         const qty = Number(rawValue)
         if (rawValue === '' || Number.isNaN(qty)) return { ...item, quantity: 0 }
-        const unit = item.label.replace(/^[\d.]+/, '')
-        return { ...item, quantity: qty, label: `${qty}${unit}` }
+        return { ...item, quantity: qty }
       }),
     )
   }
@@ -165,7 +216,7 @@ export default function NewBill() {
     setCustomerPickerOpen(false)
   }
 
-  const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+  const subtotal = resolvedCart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
   const discountNum = Number(discount) || 0
   const total = Math.max(subtotal - discountNum, 0)
 
@@ -198,7 +249,7 @@ export default function NewBill() {
         customerName: selectedCustomer?.name ?? (customerName.trim() || null),
         customerPhone: selectedCustomer?.phone ?? (customerPhone.trim() || null),
         discount: discountNum,
-        items: cart.map((item) =>
+        items: resolvedCart.map((item) =>
           item.kind === 'variant'
             ? { variant_id: item.variantId!, quantity: item.quantity }
             : { product_id: item.productId, quantity: item.quantity, label: item.label },
@@ -207,8 +258,15 @@ export default function NewBill() {
         amountPaid: paymentStatus === 'due' ? 0 : null,
       },
       {
-        onSuccess: (result) =>
-          setSuccess({ billId: result.bill_id, billNumber: result.bill_number, total: result.total }),
+        onSuccess: (result) => {
+          try {
+            localStorage.removeItem(DRAFT_KEY)
+          } catch {
+            // Best-effort only.
+          }
+          setReviewing(false)
+          setSuccess({ billId: result.bill_id, billNumber: result.bill_number, total: result.total })
+        },
         onError: (err) => setError(err.message),
       },
     )
@@ -295,92 +353,11 @@ export default function NewBill() {
     )
   }
 
-  if (reviewing) {
-    return (
-      <div className="px-4 py-6">
-        <div className="flex items-center gap-3">
-          <button
-            type="button"
-            onClick={() => setReviewing(false)}
-            aria-label="Back to edit"
-            className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full"
-          >
-            <ArrowLeft className="h-5 w-5" />
-          </button>
-          <h1 className="font-heading text-xl font-semibold">Review bill</h1>
-        </div>
-
-        <Card className="mt-4 p-4">
-          <ul className="flex flex-col gap-1.5">
-            {cart.map((item) => (
-              <li key={item.key} className="flex items-center justify-between gap-2 text-sm">
-                <span className="min-w-0 truncate text-ink/70">
-                  {item.productName} ({item.label}) × {item.quantity}
-                </span>
-                <span className="shrink-0 tabular-nums">
-                  ₹{(item.unitPrice * item.quantity).toFixed(2)}
-                </span>
-              </li>
-            ))}
-          </ul>
-          <div className="mt-3 flex flex-col gap-1 border-t border-border pt-3 text-sm">
-            <div className="flex items-center justify-between text-ink/70">
-              <span>Subtotal</span>
-              <span className="tabular-nums">₹{subtotal.toFixed(2)}</span>
-            </div>
-            {discountNum > 0 && (
-              <div className="flex items-center justify-between text-chili">
-                <span>Discount</span>
-                <span className="tabular-nums">−₹{discountNum.toFixed(2)}</span>
-              </div>
-            )}
-            <div className="mt-1 flex items-end justify-between border-t border-border pt-2">
-              <span className="font-heading text-sm font-semibold">Total</span>
-              <span className="font-display text-2xl font-semibold tabular-nums">
-                ₹{total.toFixed(2)}
-              </span>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="mt-4 flex flex-col gap-2 p-4 text-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-ink/70">Customer</span>
-            <span className="font-medium">
-              {selectedCustomer?.name ?? (customerName.trim() || 'Walk-in')}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-ink/70">Payment</span>
-            <span className="font-medium">{paymentStatus === 'due' ? 'On credit' : 'Paid now'}</span>
-          </div>
-        </Card>
-
-        {error && (
-          <div className="mt-3">
-            <ErrorBanner>{error}</ErrorBanner>
-          </div>
-        )}
-
-        <div className="mt-4 flex gap-2">
-          <Button variant="secondary" flex1 size="lg" onClick={() => setReviewing(false)}>
-            Edit
-          </Button>
-          <Button
-            flex1
-            size="lg"
-            disabled={createBill.isPending}
-            onClick={handleConfirmGenerate}
-          >
-            {createBill.isPending ? 'Generating…' : 'Confirm & generate'}
-          </Button>
-        </div>
-      </div>
-    )
-  }
+  const customerLabel = selectedCustomer?.name ?? (customerName.trim() || 'Walk-in')
+  const paymentLabel = paymentStatus === 'due' ? 'On credit' : 'Paid now'
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 pb-28">
       <h1 className="font-heading text-xl font-semibold">New bill</h1>
 
       {isLoading && (
@@ -404,25 +381,18 @@ export default function NewBill() {
         />
       )}
 
-      {!isLoading && allSellableProducts.length > 0 && (
-        <Button variant="outline" size="lg" fullWidth className="mt-4" onClick={() => setPickerOpen(true)}>
-          <Plus className="h-4 w-4" />
-          Add items
-        </Button>
-      )}
-
       <div className="mt-6">
         <h2 className="mb-2 flex items-center gap-1.5 font-heading text-sm font-semibold">
           <ShoppingCart className="h-4 w-4" />
-          Cart{cart.length > 0 ? ` (${cart.length})` : ''}
+          Cart{resolvedCart.length > 0 ? ` (${resolvedCart.length})` : ''}
         </h2>
 
-        {cart.length === 0 ? (
-          <p className="text-sm text-ink/70">Tap "Add items" above to start this bill.</p>
+        {resolvedCart.length === 0 ? (
+          <p className="text-sm text-ink/70">Tap "Add items" below to start this bill.</p>
         ) : (
           <div className="flex flex-col gap-2">
             <AnimatePresence initial={false}>
-              {cart.map((item) => {
+              {resolvedCart.map((item) => {
                 const overStock =
                   item.trackStock && item.currentStock != null && item.quantity > item.currentStock
                 return (
@@ -453,6 +423,9 @@ export default function NewBill() {
                         </button>
                       </div>
                       <div className="flex items-center justify-between">
+                        <span className="text-sm font-semibold tabular-nums">
+                          ₹{(item.unitPrice * item.quantity).toFixed(2)}
+                        </span>
                         {item.kind === 'variant' ? (
                           <QuantityStepper
                             value={item.quantity}
@@ -469,9 +442,6 @@ export default function NewBill() {
                             className="h-11 w-24 rounded-lg border border-border bg-paper px-3 text-base outline-none focus:border-turmeric"
                           />
                         )}
-                        <span className="text-sm font-semibold tabular-nums">
-                          ₹{(item.unitPrice * item.quantity).toFixed(2)}
-                        </span>
                       </div>
                       {overStock && (
                         <p className="text-xs text-chili">Only {item.currentStock} in stock</p>
@@ -600,9 +570,16 @@ export default function NewBill() {
         </div>
       )}
 
-      <Button size="lg" fullWidth className="mt-4" onClick={handleReview}>
-        Review bill
-      </Button>
+      {!isLoading && allSellableProducts.length > 0 && (
+        <StickyFooter>
+          <Button variant="outline" flex1 size="lg" onClick={() => setPickerOpen(true)}>
+            Add items
+          </Button>
+          <Button flex1 size="lg" onClick={handleReview}>
+            Review bill
+          </Button>
+        </StickyFooter>
+      )}
 
       <ProductPicker
         open={pickerOpen}
@@ -619,6 +596,26 @@ export default function NewBill() {
         open={customerPickerOpen}
         onClose={() => setCustomerPickerOpen(false)}
         onSelect={handleSelectCustomer}
+      />
+
+      <ReviewBillSheet
+        open={reviewing}
+        items={resolvedCart.map((item) => ({
+          key: item.key,
+          productName: item.productName,
+          label: item.label,
+          quantity: item.quantity,
+          lineTotal: item.unitPrice * item.quantity,
+        }))}
+        subtotal={subtotal}
+        discount={discountNum}
+        total={total}
+        customerLabel={customerLabel}
+        paymentLabel={paymentLabel}
+        error={error}
+        isPending={createBill.isPending}
+        onEdit={() => setReviewing(false)}
+        onConfirm={handleConfirmGenerate}
       />
     </div>
   )

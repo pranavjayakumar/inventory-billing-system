@@ -42,7 +42,14 @@ export function useCreateBill() {
       if (error) throw error
       return (data as CreateBillResult[])[0]
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['bills'] })
+      queryClient.invalidateQueries({ queryKey: ['bill-items'] })
+      if (variables.customerId) {
+        queryClient.invalidateQueries({ queryKey: ['customers'] })
+      }
+    },
   })
 }
 

@@ -5,6 +5,7 @@ import BillSummaryCard from '../components/BillSummaryCard'
 import ShareSheet from '../components/ShareSheet'
 import Button from '../components/ui/Button'
 import ErrorBanner from '../components/ui/ErrorBanner'
+import StickyFooter from '../components/ui/StickyFooter'
 import { downloadPdf, generateBillPdf, uploadBillPdf } from '../lib/pdf'
 import { useBillDetails } from '../lib/queries/bills'
 import { useShopSettings } from '../lib/queries/shopSettings'
@@ -30,7 +31,7 @@ export default function BillDetail() {
   }
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 pb-28">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -74,15 +75,17 @@ export default function BillDetail() {
             ₹{bill.total.toFixed(2)}
           </p>
 
-          <Button
-            variant="secondary"
-            fullWidth
-            disabled={!shopSettings}
-            onClick={() => setShareSheetOpen(true)}
-          >
-            <Share2 className="h-4 w-4" />
-            Share bill
-          </Button>
+          <StickyFooter>
+            <Button
+              variant="secondary"
+              flex1
+              disabled={!shopSettings}
+              onClick={() => setShareSheetOpen(true)}
+            >
+              <Share2 className="h-4 w-4" />
+              Share bill
+            </Button>
+          </StickyFooter>
 
           <ShareSheet
             open={shareSheetOpen}

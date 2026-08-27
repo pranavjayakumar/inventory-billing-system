@@ -314,8 +314,11 @@ function RateQuantityEntry({
         </div>
       </div>
 
-      <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
-        <Button fullWidth size="lg" disabled={!valid} onClick={handleAdd}>
+      <div className="flex gap-2 border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+        <Button variant="secondary" flex1 size="lg" onClick={onBack}>
+          Back
+        </Button>
+        <Button flex1 size="lg" disabled={!valid} onClick={handleAdd}>
           Add to cart
         </Button>
       </div>

@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Check, Copy, Download, Share2, type LucideIcon } from 'lucide-react'
+import { Check, Copy, Download, MessageCircle, Share2, type LucideIcon } from 'lucide-react'
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { canShareLink, copyToClipboard, shareLink } from '../lib/pdf'
+import { canShareLink, copyToClipboard, shareLink, whatsAppShareUrl } from '../lib/pdf'
 
 interface ShareSheetProps {
   open: boolean
@@ -19,6 +19,7 @@ export default function ShareSheet({ open, onClose, title, onDownload, getLink }
   const [cachedLink, setCachedLink] = useState<string | null>(null)
   const [copyStatus, setCopyStatus] = useState<ActionStatus>('idle')
   const [shareStatus, setShareStatus] = useState<ActionStatus>('idle')
+  const [whatsAppStatus, setWhatsAppStatus] = useState<ActionStatus>('idle')
 
   async function resolveLink() {
     if (cachedLink) return cachedLink
@@ -50,6 +51,17 @@ export default function ShareSheet({ open, onClose, title, onDownload, getLink }
     }
   }
 
+  async function handleWhatsApp() {
+    setWhatsAppStatus('working')
+    try {
+      const url = await resolveLink()
+      window.open(whatsAppShareUrl(`${title}\n${url}`), '_blank', 'noopener,noreferrer')
+      setWhatsAppStatus('idle')
+    } catch {
+      setWhatsAppStatus('error')
+    }
+  }
+
   return createPortal(
     <AnimatePresence>
       {open && (
@@ -73,6 +85,13 @@ export default function ShareSheet({ open, onClose, title, onDownload, getLink }
             className="w-full max-w-[480px] rounded-t-2xl bg-surface p-2 pb-[calc(1rem+env(safe-area-inset-bottom))]"
           >
             <div className="flex flex-col gap-0.5 p-1">
+              <SheetAction
+                icon={MessageCircle}
+                label={whatsAppStatus === 'working' ? 'Opening WhatsApp…' : 'Share on WhatsApp'}
+                onClick={handleWhatsApp}
+                disabled={whatsAppStatus === 'working'}
+                tone={whatsAppStatus === 'error' ? 'error' : 'default'}
+              />
               <SheetAction icon={Download} label="Download PDF" onClick={onDownload} />
               <SheetAction
                 icon={copyStatus === 'done' ? Check : Copy}
@@ -97,7 +116,7 @@ export default function ShareSheet({ open, onClose, title, onDownload, getLink }
                 />
               )}
             </div>
-            {(copyStatus === 'error' || shareStatus === 'error') && (
+            {(copyStatus === 'error' || shareStatus === 'error' || whatsAppStatus === 'error') && (
               <p className="px-4 pb-2 text-xs text-chili">Something went wrong. Try again.</p>
             )}
             <div className="border-t border-border p-1 pt-2">

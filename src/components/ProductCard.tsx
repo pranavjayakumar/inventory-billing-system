@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { ChevronDown, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ChevronDown, Pencil, Trash2 } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useDeleteProduct, useSetProductActive } from '../lib/queries/products'
@@ -58,77 +58,76 @@ export default function ProductCard({ product }: { product: ProductWithVariants 
           >
             <div className="border-t border-border px-4 py-3">
               {isRateMode ? (
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-ink">
-                    ₹{(product.rate_sell_price ?? 0).toFixed(2)} / {product.rate_unit}
-                  </span>
-                  {product.track_stock && (
-                    <span className="flex items-center gap-2">
-                      {(() => {
-                        const low =
-                          product.current_stock != null &&
-                          product.low_stock_alert != null &&
-                          product.current_stock <= product.low_stock_alert
-                        return (
-                          <span className={low ? 'text-chili' : 'text-ink/70'}>
-                            {product.current_stock} {product.rate_unit} in stock
-                          </span>
-                        )
-                      })()}
-                      <button
-                        type="button"
-                        onClick={() =>
-                          setStockTarget({
-                            productId: product.id,
-                            label: `${product.name} (per ${product.rate_unit})`,
-                            currentStock: product.current_stock ?? 0,
-                          })
-                        }
-                        aria-label="Update stock"
-                        className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-ink/70"
-                      >
-                        <Plus className="h-3.5 w-3.5" />
-                      </button>
+                product.track_stock ? (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setStockTarget({
+                        productId: product.id,
+                        label: `${product.name} (per ${product.rate_unit})`,
+                        currentStock: product.current_stock ?? 0,
+                      })
+                    }
+                    className="flex min-h-11 w-full items-center justify-between gap-2 text-left text-sm"
+                  >
+                    <span className="text-ink">
+                      ₹{(product.rate_sell_price ?? 0).toFixed(2)} / {product.rate_unit}
                     </span>
-                  )}
-                </div>
+                    {(() => {
+                      const low =
+                        product.current_stock != null &&
+                        product.low_stock_alert != null &&
+                        product.current_stock <= product.low_stock_alert
+                      return (
+                        <span className={low ? 'text-chili' : 'text-ink/70'}>
+                          {product.current_stock} {product.rate_unit} in stock
+                        </span>
+                      )
+                    })()}
+                  </button>
+                ) : (
+                  <div className="flex min-h-11 items-center justify-between text-sm">
+                    <span className="text-ink">
+                      ₹{(product.rate_sell_price ?? 0).toFixed(2)} / {product.rate_unit}
+                    </span>
+                  </div>
+                )
               ) : product.variants.length === 0 ? (
                 <p className="text-sm text-ink/70">No variants yet.</p>
               ) : (
-                <ul className="flex flex-col gap-2">
+                <ul className="flex flex-col">
                   {product.variants.map((v) => {
                     const low =
                       v.track_stock &&
                       v.current_stock != null &&
                       v.low_stock_alert != null &&
                       v.current_stock <= v.low_stock_alert
-                    return (
-                      <li key={v.id} className="flex items-center justify-between text-sm">
+                    return v.track_stock ? (
+                      <li key={v.id}>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setStockTarget({
+                              variantId: v.id,
+                              label: `${product.name} (${v.label})`,
+                              currentStock: v.current_stock ?? 0,
+                            })
+                          }
+                          className="flex min-h-11 w-full items-center justify-between gap-2 text-left text-sm"
+                        >
+                          <span className="text-ink">{v.label}</span>
+                          <span className="flex items-center gap-2">
+                            <span className={low ? 'text-chili' : 'text-ink/70'}>
+                              {v.current_stock} in stock
+                            </span>
+                            <span className="font-medium">₹{v.unit_price.toFixed(2)}</span>
+                          </span>
+                        </button>
+                      </li>
+                    ) : (
+                      <li key={v.id} className="flex min-h-11 items-center justify-between text-sm">
                         <span className="text-ink">{v.label}</span>
-                        <span className="flex items-center gap-2">
-                          {v.track_stock && (
-                            <>
-                              <span className={low ? 'text-chili' : 'text-ink/70'}>
-                                {v.current_stock} in stock
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  setStockTarget({
-                                    variantId: v.id,
-                                    label: `${product.name} (${v.label})`,
-                                    currentStock: v.current_stock ?? 0,
-                                  })
-                                }
-                                aria-label={`Update stock for ${v.label}`}
-                                className="flex h-6 w-6 items-center justify-center rounded-full border border-border text-ink/70"
-                              >
-                                <Plus className="h-3.5 w-3.5" />
-                              </button>
-                            </>
-                          )}
-                          <span className="font-medium">₹{v.unit_price.toFixed(2)}</span>
-                        </span>
+                        <span className="font-medium">₹{v.unit_price.toFixed(2)}</span>
                       </li>
                     )
                   })}

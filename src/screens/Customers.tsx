@@ -1,5 +1,6 @@
 import { Plus, Search, Users } from 'lucide-react'
 import { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
 import Button from '../components/ui/Button'
@@ -7,6 +8,7 @@ import Card from '../components/ui/Card'
 import ErrorBanner from '../components/ui/ErrorBanner'
 import TextField from '../components/ui/TextField'
 import { useCreateCustomer, useCustomers } from '../lib/queries/customers'
+import { FAB_CLASSNAME } from '../lib/ui'
 import { useToast } from '../lib/toastContext'
 
 export default function Customers() {
@@ -69,13 +71,7 @@ export default function Customers() {
 
   return (
     <div className="px-4 py-6">
-      <div className="flex items-center justify-between">
-        <h1 className="font-heading text-xl font-semibold">Customers</h1>
-        <Button size="sm" onClick={() => (addOpen ? closeAddForm() : setAddOpen(true))}>
-          <Plus className="h-4 w-4" />
-          Add customer
-        </Button>
-      </div>
+      <h1 className="font-heading text-xl font-semibold">Customers</h1>
 
       {addOpen && (
         <Card className="mt-4 p-4">
@@ -167,6 +163,12 @@ export default function Customers() {
           icon={Users}
           title="No customers yet"
           description="Add your first customer to start tracking credit."
+          action={
+            <Button className="mt-2" onClick={() => setAddOpen(true)}>
+              <Plus className="h-4 w-4" />
+              Add customer
+            </Button>
+          }
         />
       )}
 
@@ -207,6 +209,21 @@ export default function Customers() {
           ))}
         </div>
       )}
+
+      {hasAnyCustomers &&
+        !addOpen &&
+        createPortal(
+          <button
+            type="button"
+            onClick={() => setAddOpen(true)}
+            aria-label="Add customer"
+            className={`fixed bottom-24 z-10 ${FAB_CLASSNAME}`}
+            style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1rem))' }}
+          >
+            <Plus className="h-6 w-6" strokeWidth={2.5} />
+          </button>,
+          document.body,
+        )}
     </div>
   )
 }

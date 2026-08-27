@@ -66,14 +66,21 @@ export function useTopProducts(days: number) {
       const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
       const { data, error } = await supabase
         .from('bill_items')
-        .select('product_name_snapshot, variant_label_snapshot, quantity, subtotal, bills!inner(created_at)')
+        .select(
+          'variant_id, product_id, product_name_snapshot, variant_label_snapshot, quantity, subtotal, bills!inner(created_at)',
+        )
         .gte('bills.created_at', cutoff)
       if (error) throw error
 
       const totals = new Map<string, TopProduct>()
       for (const item of data ?? []) {
-        const key = `${item.product_name_snapshot} (${item.variant_label_snapshot})`
-        const existing = totals.get(key) ?? { key, name: key, quantity: 0, revenue: 0 }
+        // Fixed-mode sales have a stable variant_id, group per SKU. Rate-mode
+        // sales have no variant, group by product so "1.7 kg" and "0.5 kg"
+        // of the same product aggregate instead of fragmenting into rows.
+        const isRate = item.variant_id == null
+        const key = isRate ? `product:${item.product_id}` : `${item.product_name_snapshot} (${item.variant_label_snapshot})`
+        const name = isRate ? item.product_name_snapshot : `${item.product_name_snapshot} (${item.variant_label_snapshot})`
+        const existing = totals.get(key) ?? { key, name, quantity: 0, revenue: 0 }
         existing.quantity += item.quantity
         existing.revenue += item.subtotal
         totals.set(key, existing)

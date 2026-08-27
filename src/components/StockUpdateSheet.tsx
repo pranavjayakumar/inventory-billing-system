@@ -45,7 +45,7 @@ export default function StockUpdateSheet({ open, target, onClose }: StockUpdateS
   }
 
   const typedAmount = Number(amount)
-  const hasValidNumber = amount.trim() !== '' && Number.isFinite(typedAmount)
+  const hasValidNumber = amount.trim() !== '' && Number.isFinite(typedAmount) && typedAmount >= 0
   const isValid = mode === 'restock' ? hasValidNumber && typedAmount > 0 : hasValidNumber
   const delta = mode === 'adjustment' && hasValidNumber ? typedAmount - target.currentStock : 0
 

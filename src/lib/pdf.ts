@@ -146,3 +146,7 @@ export async function shareLink(url: string, title: string): Promise<void> {
     new Promise((_, reject) => setTimeout(() => reject(new Error('Share timed out')), SHARE_TIMEOUT_MS)),
   ])
 }
+
+export function whatsAppShareUrl(text: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(text)}`
+}

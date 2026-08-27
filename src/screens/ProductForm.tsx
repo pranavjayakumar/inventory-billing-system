@@ -5,6 +5,7 @@ import Switch from '../components/Switch'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import ErrorBanner from '../components/ui/ErrorBanner'
+import StickyFooter from '../components/ui/StickyFooter'
 import TextField from '../components/ui/TextField'
 import { normalizeCategory } from '../lib/category'
 import { useProduct, useProducts, useSaveProduct, type VariantInput } from '../lib/queries/products'
@@ -287,7 +288,7 @@ export default function ProductForm() {
   }
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 pb-28">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -302,7 +303,7 @@ export default function ProductForm() {
         </h1>
       </div>
 
-      <form onSubmit={handleSubmit} className="mt-4 flex flex-col gap-5">
+      <form id="product-form" onSubmit={handleSubmit} className="mt-4 flex flex-col gap-5">
         <Card className="flex flex-col gap-3 p-4">
           <TextField
             label="Name"
@@ -555,11 +556,13 @@ export default function ProductForm() {
         )}
 
         {error && <ErrorBanner>{error}</ErrorBanner>}
+      </form>
 
-        <Button type="submit" variant="primary" size="lg" fullWidth disabled={saveProduct.isPending}>
+      <StickyFooter>
+        <Button type="submit" form="product-form" variant="primary" size="lg" flex1 disabled={saveProduct.isPending}>
           {saveProduct.isPending ? 'Saving…' : 'Save product'}
         </Button>
-      </form>
+      </StickyFooter>
     </div>
   )
 }

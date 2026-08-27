@@ -5,6 +5,7 @@ import BillRow from '../components/BillRow'
 import Button from '../components/ui/Button'
 import Card from '../components/ui/Card'
 import ErrorBanner from '../components/ui/ErrorBanner'
+import StickyFooter from '../components/ui/StickyFooter'
 import TextField from '../components/ui/TextField'
 import { useCustomerDetail, useRecordPayment } from '../lib/queries/customers'
 import { useToast } from '../lib/toastContext'
@@ -73,7 +74,7 @@ export default function CustomerDetail() {
   const { customer, bills, payments, balance } = detail
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 pb-28">
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -104,24 +105,8 @@ export default function CustomerDetail() {
         </p>
       </Card>
 
-      <div className="mt-4 flex gap-2">
-        <Button
-          variant="secondary"
-          flex1
-          disabled={balance <= 0 || recordPayment.isPending}
-          onClick={handleQuickSettle}
-        >
-          <Zap className="h-4 w-4" />
-          Settle full balance
-        </Button>
-        <Button flex1 onClick={() => (paymentOpen ? closePaymentForm() : setPaymentOpen(true))}>
-          <IndianRupee className="h-4 w-4" />
-          Record payment
-        </Button>
-      </div>
-
       {paymentOpen && (
-        <Card className="mt-3 p-4">
+        <Card className="mt-4 p-4">
           <form onSubmit={handleRecordPayment} className="flex flex-col gap-3">
             <TextField
               label="Amount ₹"
@@ -185,6 +170,22 @@ export default function CustomerDetail() {
           </Card>
         )}
       </div>
+
+      <StickyFooter>
+        <Button
+          variant="secondary"
+          flex1
+          disabled={balance <= 0 || recordPayment.isPending}
+          onClick={handleQuickSettle}
+        >
+          <Zap className="h-4 w-4" />
+          Settle full balance
+        </Button>
+        <Button flex1 onClick={() => (paymentOpen ? closePaymentForm() : setPaymentOpen(true))}>
+          <IndianRupee className="h-4 w-4" />
+          Record payment
+        </Button>
+      </StickyFooter>
     </div>
   )
 }

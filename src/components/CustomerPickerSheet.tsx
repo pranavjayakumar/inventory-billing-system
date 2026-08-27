@@ -125,11 +125,6 @@ export default function CustomerPickerSheet({ open, onClose, onSelect }: Custome
                   />
                 </div>
 
-                <Button variant="outline" fullWidth className="mt-3" onClick={() => setAddingNew(true)}>
-                  <UserPlus className="h-4 w-4" />
-                  Add new customer
-                </Button>
-
                 {isLoading && <p className="mt-6 text-center text-sm text-ink/70">Loading…</p>}
 
                 {!isLoading && matches.length === 0 && (
@@ -166,6 +161,15 @@ export default function CustomerPickerSheet({ open, onClose, onSelect }: Custome
               </>
             )}
           </div>
+
+          {!addingNew && (
+            <div className="border-t border-border p-4 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+              <Button variant="outline" fullWidth onClick={() => setAddingNew(true)}>
+                <UserPlus className="h-4 w-4" />
+                Add new customer
+              </Button>
+            </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>,
