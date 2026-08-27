@@ -15,6 +15,7 @@ export function useShopSettings() {
 
 export interface UpdateShopSettingsInput {
   shop_name: string
+  owner_name: string | null
   address: string | null
   phone: string | null
   logo_url: string | null

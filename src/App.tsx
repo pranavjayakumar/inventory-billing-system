@@ -5,12 +5,15 @@ import AddProductFab from './components/AddProductFab'
 import BottomNav from './components/BottomNav'
 import PageTransition from './components/PageTransition'
 import BillDetail from './screens/BillDetail'
+import CustomerDetail from './screens/CustomerDetail'
+import Customers from './screens/Customers'
 import History from './screens/History'
 import Home from './screens/Home'
 import NewBill from './screens/NewBill'
 import ProductForm from './screens/ProductForm'
 import Products from './screens/Products'
 import Settings from './screens/Settings'
+import Stock from './screens/Stock'
 import { ToastProvider } from './lib/toast'
 
 const queryClient = new QueryClient()
@@ -82,6 +85,30 @@ function AnimatedRoutes() {
           element={
             <PageTransition>
               <Settings />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/customers"
+          element={
+            <PageTransition>
+              <Customers />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/customers/:id"
+          element={
+            <PageTransition>
+              <CustomerDetail />
+            </PageTransition>
+          }
+        />
+        <Route
+          path="/stock"
+          element={
+            <PageTransition>
+              <Stock />
             </PageTransition>
           }
         />

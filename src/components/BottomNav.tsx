@@ -1,5 +1,5 @@
 import { motion } from 'framer-motion'
-import { Home, Package, Plus, Receipt, Settings, type LucideIcon } from 'lucide-react'
+import { Home, Package, Plus, Receipt, Users, type LucideIcon } from 'lucide-react'
 import { NavLink, useLocation } from 'react-router-dom'
 import { FAB_CLASSNAME } from '../lib/ui'
 
@@ -9,8 +9,8 @@ const leftTabs = [
 ]
 
 const rightTabs = [
+  { to: '/customers', label: 'Customers', icon: Users },
   { to: '/history', label: 'History', icon: Receipt },
-  { to: '/settings', label: 'Settings', icon: Settings },
 ]
 
 export default function BottomNav() {

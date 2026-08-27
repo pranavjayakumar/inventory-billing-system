@@ -1,4 +1,6 @@
+import { ArrowLeft } from 'lucide-react'
 import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import Card from '../components/ui/Card'
 import Button from '../components/ui/Button'
 import ErrorBanner from '../components/ui/ErrorBanner'
@@ -10,8 +12,10 @@ export default function Settings() {
   const { data: shopSettings, isLoading } = useShopSettings()
   const updateShopSettings = useUpdateShopSettings()
   const toast = useToast()
+  const navigate = useNavigate()
 
   const [shopName, setShopName] = useState('')
+  const [ownerName, setOwnerName] = useState('')
   const [address, setAddress] = useState('')
   const [phone, setPhone] = useState('')
   const [logoUrl, setLogoUrl] = useState('')
@@ -20,6 +24,7 @@ export default function Settings() {
   useEffect(() => {
     if (!shopSettings) return
     setShopName(shopSettings.shop_name)
+    setOwnerName(shopSettings.owner_name ?? '')
     setAddress(shopSettings.address ?? '')
     setPhone(shopSettings.phone ?? '')
     setLogoUrl(shopSettings.logo_url ?? '')
@@ -37,6 +42,7 @@ export default function Settings() {
     updateShopSettings.mutate(
       {
         shop_name: shopName.trim(),
+        owner_name: ownerName.trim() || null,
         address: address.trim() || null,
         phone: phone.trim() || null,
         logo_url: logoUrl.trim() || null,
@@ -54,7 +60,17 @@ export default function Settings() {
 
   return (
     <div className="px-4 py-6">
-      <h1 className="font-heading text-xl font-semibold">Settings</h1>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => navigate('/')}
+          aria-label="Back"
+          className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full text-ink/70"
+        >
+          <ArrowLeft className="h-5 w-5" />
+        </button>
+        <h1 className="font-heading text-xl font-semibold">Settings</h1>
+      </div>
       <p className="mt-1 text-sm text-ink/70">
         This appears on every bill you generate.
       </p>
@@ -66,6 +82,12 @@ export default function Settings() {
             value={shopName}
             onChange={(e) => setShopName(e.target.value)}
             placeholder="My Shop"
+          />
+          <TextField
+            label="Owner name (optional)"
+            value={ownerName}
+            onChange={(e) => setOwnerName(e.target.value)}
+            placeholder="Your name"
           />
           <TextField
             label="Address (optional)"

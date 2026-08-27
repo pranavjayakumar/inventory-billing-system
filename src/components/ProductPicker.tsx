@@ -75,7 +75,7 @@ export default function ProductPicker({
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 16 }}
           transition={{ duration: 0.18, ease: 'easeOut' }}
-          className="fixed inset-0 z-50 flex flex-col bg-paper"
+          className="fixed inset-0 z-50 mx-auto flex w-full max-w-[480px] flex-col bg-paper"
         >
           {rateProduct ? (
             <RateQuantityEntry

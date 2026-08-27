@@ -1,4 +1,4 @@
-import { AlertTriangle, Receipt, TrendingUp } from 'lucide-react'
+import { AlertTriangle, Receipt, Settings, TrendingUp } from 'lucide-react'
 import { useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import BillRow from '../components/BillRow'
@@ -42,28 +42,43 @@ export default function Home() {
     return { todayTotal: today, weekTotal: week, monthTotal: month }
   }, [bills])
 
-  const lowStock = useMemo(
-    () =>
-      (products ?? []).flatMap((p) =>
-        p.variants
-          .filter(
-            (v) =>
-              v.track_stock &&
-              v.current_stock != null &&
-              v.low_stock_alert != null &&
-              v.current_stock <= v.low_stock_alert,
-          )
-          .map((v) => ({ product: p, variant: v })),
-      ),
-    [products],
-  )
+  const lowStockCount = useMemo(() => {
+    let count = 0
+    for (const p of products ?? []) {
+      if (p.pricing_mode === 'fixed') {
+        for (const v of p.variants) {
+          if (v.track_stock && v.current_stock != null && v.low_stock_alert != null && v.current_stock <= v.low_stock_alert) {
+            count++
+          }
+        }
+      } else if (
+        p.track_stock &&
+        p.current_stock != null &&
+        p.low_stock_alert != null &&
+        p.current_stock <= p.low_stock_alert
+      ) {
+        count++
+      }
+    }
+    return count
+  }, [products])
 
   const hasAnyBills = (bills?.length ?? 0) > 0
 
   if (!isLoading && !hasAnyBills) {
     return (
       <div className="px-4 py-6">
-        <h1 className="font-heading text-xl font-semibold">Home</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="font-heading text-xl font-semibold">Home</h1>
+          <button
+            type="button"
+            onClick={() => navigate('/settings')}
+            aria-label="Settings"
+            className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-ink/70"
+          >
+            <Settings className="h-5 w-5" />
+          </button>
+        </div>
         <EmptyState
           icon={TrendingUp}
           title="No sales yet"
@@ -75,7 +90,17 @@ export default function Home() {
 
   return (
     <div className="px-4 py-6">
-      <h1 className="font-heading text-xl font-semibold">Home</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-heading text-xl font-semibold">Home</h1>
+        <button
+          type="button"
+          onClick={() => navigate('/settings')}
+          aria-label="Settings"
+          className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-ink/70"
+        >
+          <Settings className="h-5 w-5" />
+        </button>
+      </div>
 
       {isLoading ? (
         <div className="mt-4 flex flex-col gap-3">
@@ -116,30 +141,18 @@ export default function Home() {
             </Card>
           </div>
 
-          {lowStock.length > 0 && (
-            <div>
-              <h2 className="mb-2 flex items-center gap-1.5 font-heading text-sm font-semibold text-chili">
+          {lowStockCount > 0 && (
+            <button
+              type="button"
+              onClick={() => navigate('/stock')}
+              className="flex min-h-11 items-center justify-between gap-2 rounded-2xl border border-chili/30 bg-chili/10 px-4 py-3 text-left"
+            >
+              <span className="flex items-center gap-1.5 text-sm font-medium text-chili">
                 <AlertTriangle className="h-4 w-4" />
-                Low stock
-              </h2>
-              <Card className="flex flex-col divide-y divide-border overflow-hidden">
-                {lowStock.map(({ product, variant }) => (
-                  <button
-                    key={variant.id}
-                    type="button"
-                    onClick={() => navigate(`/products/${product.id}/edit`)}
-                    className="flex items-center justify-between gap-2 p-3 text-left"
-                  >
-                    <span className="text-sm">
-                      {product.name} ({variant.label})
-                    </span>
-                    <span className="shrink-0 text-sm font-medium tabular-nums text-chili">
-                      {variant.current_stock} left
-                    </span>
-                  </button>
-                ))}
-              </Card>
-            </div>
+                {lowStockCount} item{lowStockCount === 1 ? '' : 's'} low on stock
+              </span>
+              <span className="text-xs font-medium text-chili">View</span>
+            </button>
           )}
 
           {topProducts && topProducts.length > 0 && (

@@ -1,9 +1,10 @@
 import { AnimatePresence, motion } from 'framer-motion'
-import { Package, Plus, Share2, ShoppingCart, Trash2 } from 'lucide-react'
+import { ArrowLeft, Package, Plus, Share2, ShoppingCart, Trash2, UserPlus } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import AnimatedCheckmark from '../components/AnimatedCheckmark'
 import BillSummaryCard from '../components/BillSummaryCard'
+import CustomerPickerSheet from '../components/CustomerPickerSheet'
 import EmptyState from '../components/EmptyState'
 import ProductPicker from '../components/ProductPicker'
 import QuantityStepper from '../components/QuantityStepper'
@@ -14,9 +15,10 @@ import ErrorBanner from '../components/ui/ErrorBanner'
 import TextField from '../components/ui/TextField'
 import { downloadPdf, generateBillPdf, uploadBillPdf } from '../lib/pdf'
 import { useBillDetails, useCreateBill } from '../lib/queries/bills'
+import type { CustomerWithBalance } from '../lib/queries/customers'
 import { useProducts } from '../lib/queries/products'
 import { useShopSettings } from '../lib/queries/shopSettings'
-import type { ProductWithVariants, Variant } from '../types/db'
+import type { PaymentStatus, ProductWithVariants, Variant } from '../types/db'
 
 interface CartItem {
   key: string
@@ -43,12 +45,16 @@ export default function NewBill() {
   const { data: shopSettings } = useShopSettings()
   const [shareSheetOpen, setShareSheetOpen] = useState(false)
   const [pickerOpen, setPickerOpen] = useState(false)
+  const [customerPickerOpen, setCustomerPickerOpen] = useState(false)
 
   const [cart, setCart] = useState<CartItem[]>([])
   const [customerName, setCustomerName] = useState('')
   const [customerPhone, setCustomerPhone] = useState('')
+  const [selectedCustomer, setSelectedCustomer] = useState<CustomerWithBalance | null>(null)
+  const [paymentStatus, setPaymentStatus] = useState<PaymentStatus>('paid')
   const [discount, setDiscount] = useState('')
   const [error, setError] = useState<string | null>(null)
+  const [reviewing, setReviewing] = useState(false)
 
   const allSellableProducts = useMemo(
     () =>
@@ -132,11 +138,18 @@ export default function NewBill() {
     setCart((prev) => prev.filter((item) => item.key !== key))
   }
 
+  function handleSelectCustomer(customer: CustomerWithBalance) {
+    setSelectedCustomer(customer)
+    setCustomerName(customer.name)
+    setCustomerPhone(customer.phone ?? '')
+    setCustomerPickerOpen(false)
+  }
+
   const subtotal = cart.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
   const discountNum = Number(discount) || 0
   const total = Math.max(subtotal - discountNum, 0)
 
-  function handleGenerate() {
+  function handleReview() {
     setError(null)
     if (cart.length === 0) {
       setError('Add at least one item to the bill.')
@@ -150,18 +163,28 @@ export default function NewBill() {
       setError("Discount can't be more than the subtotal.")
       return
     }
+    if (paymentStatus === 'due' && !selectedCustomer) {
+      setError('Choose a customer for credit sales.')
+      return
+    }
+    setReviewing(true)
+  }
 
+  function handleConfirmGenerate() {
+    setError(null)
     createBill.mutate(
       {
-        customerId: null,
-        customerName: customerName.trim() || null,
-        customerPhone: customerPhone.trim() || null,
+        customerId: selectedCustomer?.id ?? null,
+        customerName: selectedCustomer?.name ?? (customerName.trim() || null),
+        customerPhone: selectedCustomer?.phone ?? (customerPhone.trim() || null),
         discount: discountNum,
         items: cart.map((item) =>
           item.kind === 'variant'
             ? { variant_id: item.variantId!, quantity: item.quantity }
             : { product_id: item.productId, quantity: item.quantity, label: item.label },
         ),
+        paymentStatus,
+        amountPaid: paymentStatus === 'due' ? 0 : null,
       },
       {
         onSuccess: (result) =>
@@ -175,8 +198,11 @@ export default function NewBill() {
     setCart([])
     setCustomerName('')
     setCustomerPhone('')
+    setSelectedCustomer(null)
+    setPaymentStatus('paid')
     setDiscount('')
     setError(null)
+    setReviewing(false)
     setSuccess(null)
     setShareSheetOpen(false)
   }
@@ -245,6 +271,90 @@ export default function NewBill() {
           onDownload={handleDownload}
           getLink={handleGetLink}
         />
+      </div>
+    )
+  }
+
+  if (reviewing) {
+    return (
+      <div className="px-4 py-6">
+        <div className="flex items-center gap-3">
+          <button
+            type="button"
+            onClick={() => setReviewing(false)}
+            aria-label="Back to edit"
+            className="-ml-2 flex h-11 w-11 items-center justify-center rounded-full"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+          <h1 className="font-heading text-xl font-semibold">Review bill</h1>
+        </div>
+
+        <Card className="mt-4 p-4">
+          <ul className="flex flex-col gap-1.5">
+            {cart.map((item) => (
+              <li key={item.key} className="flex items-center justify-between gap-2 text-sm">
+                <span className="min-w-0 truncate text-ink/70">
+                  {item.productName} ({item.label}) × {item.quantity}
+                </span>
+                <span className="shrink-0 tabular-nums">
+                  ₹{(item.unitPrice * item.quantity).toFixed(2)}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <div className="mt-3 flex flex-col gap-1 border-t border-border pt-3 text-sm">
+            <div className="flex items-center justify-between text-ink/70">
+              <span>Subtotal</span>
+              <span className="tabular-nums">₹{subtotal.toFixed(2)}</span>
+            </div>
+            {discountNum > 0 && (
+              <div className="flex items-center justify-between text-chili">
+                <span>Discount</span>
+                <span className="tabular-nums">−₹{discountNum.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="mt-1 flex items-end justify-between border-t border-border pt-2">
+              <span className="font-heading text-sm font-semibold">Total</span>
+              <span className="font-display text-2xl font-semibold tabular-nums">
+                ₹{total.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </Card>
+
+        <Card className="mt-4 flex flex-col gap-2 p-4 text-sm">
+          <div className="flex items-center justify-between">
+            <span className="text-ink/70">Customer</span>
+            <span className="font-medium">
+              {selectedCustomer?.name ?? (customerName.trim() || 'Walk-in')}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-ink/70">Payment</span>
+            <span className="font-medium">{paymentStatus === 'due' ? 'On credit' : 'Paid now'}</span>
+          </div>
+        </Card>
+
+        {error && (
+          <div className="mt-3">
+            <ErrorBanner>{error}</ErrorBanner>
+          </div>
+        )}
+
+        <div className="mt-4 flex gap-2">
+          <Button variant="secondary" flex1 size="lg" onClick={() => setReviewing(false)}>
+            Edit
+          </Button>
+          <Button
+            flex1
+            size="lg"
+            disabled={createBill.isPending}
+            onClick={handleConfirmGenerate}
+          >
+            {createBill.isPending ? 'Generating…' : 'Confirm & generate'}
+          </Button>
+        </div>
       </div>
     )
   }
@@ -356,21 +466,83 @@ export default function NewBill() {
       </div>
 
       <Card className="mt-6 flex flex-col gap-3 p-4">
-        <h2 className="font-heading text-sm font-semibold">Customer (optional)</h2>
-        <TextField
-          label="Name"
-          value={customerName}
-          onChange={(e) => setCustomerName(e.target.value)}
-          placeholder="Walk-in"
-        />
-        <TextField
-          label="Phone"
-          value={customerPhone}
-          onChange={(e) => setCustomerPhone(e.target.value)}
-          type="tel"
-          inputMode="tel"
-          placeholder="98765 43210"
-        />
+        <h2 className="font-heading text-sm font-semibold">Customer</h2>
+
+        <div className="flex rounded-lg border border-border p-1">
+          <button
+            type="button"
+            onClick={() => setPaymentStatus('paid')}
+            className={`h-9 flex-1 rounded-md text-sm font-medium transition-colors ${
+              paymentStatus === 'paid' ? 'bg-turmeric text-surface' : 'text-ink/70'
+            }`}
+          >
+            Paid now
+          </button>
+          <button
+            type="button"
+            onClick={() => setPaymentStatus('due')}
+            className={`h-9 flex-1 rounded-md text-sm font-medium transition-colors ${
+              paymentStatus === 'due' ? 'bg-turmeric text-surface' : 'text-ink/70'
+            }`}
+          >
+            On credit
+          </button>
+        </div>
+
+        {paymentStatus === 'due' ? (
+          selectedCustomer ? (
+            <div className="flex min-h-11 items-center justify-between gap-2 rounded-lg border border-border bg-surface px-3 py-2">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium">{selectedCustomer.name}</p>
+                {selectedCustomer.phone && (
+                  <p className="text-xs text-ink/70">{selectedCustomer.phone}</p>
+                )}
+              </div>
+              <button
+                type="button"
+                onClick={() => setCustomerPickerOpen(true)}
+                className="shrink-0 text-xs font-medium text-turmeric"
+              >
+                Change
+              </button>
+            </div>
+          ) : (
+            <Button variant="outline" fullWidth onClick={() => setCustomerPickerOpen(true)}>
+              <UserPlus className="h-4 w-4" />
+              Choose customer
+            </Button>
+          )
+        ) : (
+          <>
+            <TextField
+              label="Name (optional)"
+              value={customerName}
+              onChange={(e) => {
+                setCustomerName(e.target.value)
+                setSelectedCustomer(null)
+              }}
+              placeholder="Walk-in"
+            />
+            <TextField
+              label="Phone (optional)"
+              value={customerPhone}
+              onChange={(e) => {
+                setCustomerPhone(e.target.value)
+                setSelectedCustomer(null)
+              }}
+              type="tel"
+              inputMode="tel"
+              placeholder="98765 43210"
+            />
+            <button
+              type="button"
+              onClick={() => setCustomerPickerOpen(true)}
+              className="self-start text-xs font-medium text-turmeric"
+            >
+              or choose a saved customer
+            </button>
+          </>
+        )}
       </Card>
 
       <Card className="mt-4 flex flex-col gap-3 p-4">
@@ -408,14 +580,8 @@ export default function NewBill() {
         </div>
       )}
 
-      <Button
-        size="lg"
-        fullWidth
-        className="mt-4"
-        disabled={createBill.isPending}
-        onClick={handleGenerate}
-      >
-        {createBill.isPending ? 'Generating…' : 'Generate bill'}
+      <Button size="lg" fullWidth className="mt-4" onClick={handleReview}>
+        Review bill
       </Button>
 
       <ProductPicker
@@ -426,6 +592,12 @@ export default function NewBill() {
         onAddToCart={addToCart}
         onAddRateToCart={addRateToCart}
         cartCount={cart.length}
+      />
+
+      <CustomerPickerSheet
+        open={customerPickerOpen}
+        onClose={() => setCustomerPickerOpen(false)}
+        onSelect={handleSelectCustomer}
       />
     </div>
   )

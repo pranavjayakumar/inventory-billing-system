@@ -3,3 +3,4 @@
 - Stock reduction
 - Stock handling section
 - Buying rate and selling rate
+- quick settle button

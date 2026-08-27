@@ -1,4 +1,4 @@
-import { ArrowLeft, IndianRupee } from 'lucide-react'
+import { ArrowLeft, IndianRupee, Zap } from 'lucide-react'
 import { useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import BillRow from '../components/BillRow'
@@ -28,6 +28,17 @@ export default function CustomerDetail() {
   function closePaymentForm() {
     setPaymentOpen(false)
     setError(null)
+  }
+
+  function handleQuickSettle() {
+    if (!id || balance <= 0) return
+    recordPayment.mutate(
+      { customerId: id, amount: balance, note: 'Full settlement' },
+      {
+        onSuccess: () => toast('Balance settled', 'success'),
+        onError: (err) => toast(err.message, 'error'),
+      },
+    )
   }
 
   function handleRecordPayment(e: React.FormEvent) {
@@ -93,14 +104,21 @@ export default function CustomerDetail() {
         </p>
       </Card>
 
-      <Button
-        className="mt-4"
-        fullWidth
-        onClick={() => (paymentOpen ? closePaymentForm() : setPaymentOpen(true))}
-      >
-        <IndianRupee className="h-4 w-4" />
-        Record payment
-      </Button>
+      <div className="mt-4 flex gap-2">
+        <Button
+          variant="secondary"
+          flex1
+          disabled={balance <= 0 || recordPayment.isPending}
+          onClick={handleQuickSettle}
+        >
+          <Zap className="h-4 w-4" />
+          Settle full balance
+        </Button>
+        <Button flex1 onClick={() => (paymentOpen ? closePaymentForm() : setPaymentOpen(true))}>
+          <IndianRupee className="h-4 w-4" />
+          Record payment
+        </Button>
+      </div>
 
       {paymentOpen && (
         <Card className="mt-3 p-4">

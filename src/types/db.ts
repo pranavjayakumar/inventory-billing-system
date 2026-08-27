@@ -100,6 +100,7 @@ export interface Payment {
 export interface ShopSettings {
   id: number
   shop_name: string
+  owner_name: string | null
   address: string | null
   phone: string | null
   logo_url: string | null

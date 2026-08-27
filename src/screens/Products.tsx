@@ -1,4 +1,4 @@
-import { Package, Plus, Search } from 'lucide-react'
+import { Boxes, Package, Plus, Search } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import EmptyState from '../components/EmptyState'
@@ -40,7 +40,17 @@ export default function Products() {
 
   return (
     <div className="px-4 py-6">
-      <h1 className="font-heading text-xl font-semibold">Products</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="font-heading text-xl font-semibold">Products</h1>
+        <button
+          type="button"
+          onClick={() => navigate('/stock')}
+          aria-label="Stock"
+          className="-mr-2 flex h-11 w-11 items-center justify-center rounded-full text-ink/70"
+        >
+          <Boxes className="h-5 w-5" />
+        </button>
+      </div>
 
       {hasAnyProducts && (
         <div className="mt-4 flex h-11 items-center gap-2 rounded-lg border border-border bg-surface px-3">

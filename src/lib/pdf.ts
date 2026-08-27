@@ -22,6 +22,10 @@ export function generateBillPdf(bill: Bill, items: BillItem[], shop: ShopSetting
   doc.setFont('helvetica', 'normal')
   doc.setFontSize(10)
   doc.setTextColor(90)
+  if (shop.owner_name) {
+    doc.text(shop.owner_name, MARGIN, y)
+    y += 14
+  }
   if (shop.address) {
     doc.text(shop.address, MARGIN, y)
     y += 14
