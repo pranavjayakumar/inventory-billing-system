@@ -1,11 +1,12 @@
-import { AlertTriangle, Receipt, TrendingUp } from 'lucide-react'
+import { AlertTriangle, Receipt, Settings, TrendingUp } from 'lucide-react'
 import { useMemo } from 'react'
+import { createPortal } from 'react-dom'
 import { useNavigate } from 'react-router-dom'
 import BillRow from '../components/BillRow'
 import EmptyState from '../components/EmptyState'
 import Card from '../components/ui/Card'
 import { useBills } from '../lib/queries/bills'
-import { useTopProducts } from '../lib/queries/dashboard'
+import { useProfitSummary, useTopProducts } from '../lib/queries/dashboard'
 import { useProducts } from '../lib/queries/products'
 
 function isToday(iso: string): boolean {
@@ -23,8 +24,9 @@ export default function Home() {
   const { data: bills, isLoading: billsLoading } = useBills()
   const { data: topProducts, isLoading: topLoading } = useTopProducts(30)
   const { data: products, isLoading: productsLoading } = useProducts()
+  const { data: profit, isLoading: profitLoading } = useProfitSummary()
 
-  const isLoading = billsLoading || topLoading || productsLoading
+  const isLoading = billsLoading || topLoading || productsLoading || profitLoading
 
   const { todayTotal, weekTotal, monthTotal } = useMemo(() => {
     const sevenDaysAgo = Date.now() - 7 * 24 * 60 * 60 * 1000
@@ -41,39 +43,58 @@ export default function Home() {
     return { todayTotal: today, weekTotal: week, monthTotal: month }
   }, [bills])
 
-  const lowStock = useMemo(
-    () =>
-      (products ?? []).flatMap((p) =>
-        p.variants
-          .filter(
-            (v) =>
-              v.track_stock &&
-              v.current_stock != null &&
-              v.low_stock_alert != null &&
-              v.current_stock <= v.low_stock_alert,
-          )
-          .map((v) => ({ product: p, variant: v })),
-      ),
-    [products],
-  )
+  const lowStockCount = useMemo(() => {
+    let count = 0
+    for (const p of products ?? []) {
+      if (p.pricing_mode === 'fixed') {
+        for (const v of p.variants) {
+          if (v.track_stock && v.current_stock != null && v.low_stock_alert != null && v.current_stock <= v.low_stock_alert) {
+            count++
+          }
+        }
+      } else if (
+        p.track_stock &&
+        p.current_stock != null &&
+        p.low_stock_alert != null &&
+        p.current_stock <= p.low_stock_alert
+      ) {
+        count++
+      }
+    }
+    return count
+  }, [products])
 
   const hasAnyBills = (bills?.length ?? 0) > 0
 
+  const settingsFab = createPortal(
+    <button
+      type="button"
+      onClick={() => navigate('/settings')}
+      aria-label="Settings"
+      className="fixed bottom-24 z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-border bg-surface text-ink/70 shadow-lg shadow-ink/10 transition-transform active:scale-95"
+      style={{ right: 'max(1rem, calc((100vw - 480px) / 2 + 1.25rem))' }}
+    >
+      <Settings className="h-5 w-5" />
+    </button>,
+    document.body,
+  )
+
   if (!isLoading && !hasAnyBills) {
     return (
-      <div className="px-4 py-6">
+      <div className="px-4 py-6 pb-8">
         <h1 className="font-heading text-xl font-semibold">Home</h1>
         <EmptyState
           icon={TrendingUp}
           title="No sales yet"
           description="Once you generate your first bill, today's sales and trends will show up here."
         />
+        {settingsFab}
       </div>
     )
   }
 
   return (
-    <div className="px-4 py-6">
+    <div className="px-4 py-6 pb-8">
       <h1 className="font-heading text-xl font-semibold">Home</h1>
 
       {isLoading ? (
@@ -89,6 +110,9 @@ export default function Home() {
             <p className="mt-1 font-display text-5xl font-semibold tabular-nums">
               ₹{todayTotal.toFixed(2)}
             </p>
+            <p className="mt-1 text-sm text-cardamom tabular-nums">
+              ₹{(profit?.today ?? 0).toFixed(2)} profit
+            </p>
           </Card>
 
           <div className="grid grid-cols-2 gap-3">
@@ -97,39 +121,33 @@ export default function Home() {
               <p className="mt-1 font-heading text-lg font-semibold tabular-nums">
                 ₹{weekTotal.toFixed(2)}
               </p>
+              <p className="mt-0.5 text-xs text-cardamom tabular-nums">
+                ₹{(profit?.week ?? 0).toFixed(2)} profit
+              </p>
             </Card>
             <Card className="p-4">
               <p className="text-xs text-ink/70">Last 30 days</p>
               <p className="mt-1 font-heading text-lg font-semibold tabular-nums">
                 ₹{monthTotal.toFixed(2)}
               </p>
+              <p className="mt-0.5 text-xs text-cardamom tabular-nums">
+                ₹{(profit?.month ?? 0).toFixed(2)} profit
+              </p>
             </Card>
           </div>
 
-          {lowStock.length > 0 && (
-            <div>
-              <h2 className="mb-2 flex items-center gap-1.5 font-heading text-sm font-semibold text-chili">
+          {lowStockCount > 0 && (
+            <button
+              type="button"
+              onClick={() => navigate('/stock')}
+              className="flex min-h-11 items-center justify-between gap-2 rounded-2xl border border-chili/30 bg-chili/10 px-4 py-3 text-left"
+            >
+              <span className="flex items-center gap-1.5 text-sm font-medium text-chili">
                 <AlertTriangle className="h-4 w-4" />
-                Low stock
-              </h2>
-              <Card className="flex flex-col divide-y divide-border overflow-hidden">
-                {lowStock.map(({ product, variant }) => (
-                  <button
-                    key={variant.id}
-                    type="button"
-                    onClick={() => navigate(`/products/${product.id}/edit`)}
-                    className="flex items-center justify-between gap-2 p-3 text-left"
-                  >
-                    <span className="text-sm">
-                      {product.name} ({variant.label})
-                    </span>
-                    <span className="shrink-0 text-sm font-medium tabular-nums text-chili">
-                      {variant.current_stock} left
-                    </span>
-                  </button>
-                ))}
-              </Card>
-            </div>
+                {lowStockCount} item{lowStockCount === 1 ? '' : 's'} low on stock
+              </span>
+              <span className="text-xs font-medium text-chili">View</span>
+            </button>
           )}
 
           {topProducts && topProducts.length > 0 && (
@@ -173,6 +191,7 @@ export default function Home() {
           </div>
         </div>
       )}
+      {settingsFab}
     </div>
   )
 }

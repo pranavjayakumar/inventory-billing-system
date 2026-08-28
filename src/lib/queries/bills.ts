@@ -1,17 +1,22 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../supabase'
-import type { Bill, BillItem } from '../../types/db'
+import type { Bill, BillItem, PaymentStatus } from '../../types/db'
 
 export interface CreateBillItemInput {
-  variant_id: string
+  variant_id?: string
+  product_id?: string
   quantity: number
+  label?: string
 }
 
 export interface CreateBillInput {
+  customerId: string | null
   customerName: string | null
   customerPhone: string | null
   discount: number
   items: CreateBillItemInput[]
+  paymentStatus?: PaymentStatus
+  amountPaid?: number | null
 }
 
 export interface CreateBillResult {
@@ -25,16 +30,26 @@ export function useCreateBill() {
   return useMutation({
     mutationFn: async (input: CreateBillInput): Promise<CreateBillResult> => {
       const { data, error } = await supabase.rpc('create_bill', {
+        p_customer_id: input.customerId,
         p_customer_name: input.customerName,
         p_customer_phone: input.customerPhone,
         p_discount: input.discount,
         p_notes: null,
         p_items: input.items,
+        p_payment_status: input.paymentStatus ?? 'paid',
+        p_amount_paid: input.amountPaid ?? null,
       })
       if (error) throw error
       return (data as CreateBillResult[])[0]
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['products'] }),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['products'] })
+      queryClient.invalidateQueries({ queryKey: ['bills'] })
+      queryClient.invalidateQueries({ queryKey: ['bill-items'] })
+      if (variables.customerId) {
+        queryClient.invalidateQueries({ queryKey: ['customers'] })
+      }
+    },
   })
 }
 

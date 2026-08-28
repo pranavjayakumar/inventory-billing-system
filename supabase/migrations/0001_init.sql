@@ -1,4 +1,4 @@
--- Kirana Billing: initial schema
+-- Aniyathi Mart: initial schema
 -- Run this once in the Supabase SQL editor (or via `supabase db push`).
 
 create extension if not exists pgcrypto;
@@ -80,10 +80,10 @@ create index idx_stock_movements_variant on stock_movements(variant_id);
 -- SHOP SETTINGS (single row)
 create table shop_settings (
   id int primary key default 1,
-  shop_name text not null default 'My Shop',
+  shop_name text not null default 'Aniyathi Mart',
   address text,
   phone text,
-  logo_url text,
+  logo_url text default '/favicon.png',
   constraint single_row check (id = 1)
 );
 insert into shop_settings (id) values (1);

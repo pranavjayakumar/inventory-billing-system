@@ -10,10 +10,10 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg'],
+      includeAssets: ['favicon.png'],
       manifest: {
         name: 'Aniyathi Mart',
-        short_name: 'Aniyathi',
+        short_name: 'Aniyathi Mart',
         description: 'Billing and inventory for your shop counter.',
         theme_color: '#F5F6F0',
         background_color: '#F5F6F0',
@@ -21,9 +21,9 @@ export default defineConfig({
         start_url: '/',
         icons: [
           {
-            src: '/favicon.svg',
+            src: '/favicon.png',
             sizes: 'any',
-            type: 'image/svg+xml',
+            type: 'image/png',
             purpose: 'any maskable',
           },
         ],

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { supabase } from '../supabase'
-import type { ProductWithVariants } from '../../types/db'
+import type { PricingMode, ProductWithVariants, RateUnit } from '../../types/db'
 
 const PRODUCTS_KEY = ['products'] as const
 
@@ -40,6 +40,7 @@ export interface VariantInput {
   id?: string
   label: string
   unit_price: number
+  cost_price: number | null
   track_stock: boolean
   current_stock: number | null
   low_stock_alert: number | null
@@ -50,6 +51,14 @@ export interface ProductInput {
   name: string
   category: string | null
   image_url: string | null
+  pricing_mode: PricingMode
+  rate_unit: RateUnit | null
+  rate_sell_price: number | null
+  rate_cost_price: number | null
+  rate_quick_picks: number[] | null
+  track_stock: boolean
+  current_stock: number | null
+  low_stock_alert: number | null
   variants: VariantInput[]
 }
 
@@ -59,21 +68,30 @@ export function useSaveProduct() {
     mutationFn: async (input: ProductInput) => {
       let productId = input.id
 
+      const productFields = {
+        name: input.name,
+        category: input.category,
+        image_url: input.image_url,
+        pricing_mode: input.pricing_mode,
+        rate_unit: input.pricing_mode === 'rate' ? input.rate_unit : null,
+        rate_sell_price: input.pricing_mode === 'rate' ? input.rate_sell_price : null,
+        rate_cost_price: input.pricing_mode === 'rate' ? input.rate_cost_price : null,
+        rate_quick_picks: input.pricing_mode === 'rate' ? input.rate_quick_picks : null,
+        track_stock: input.pricing_mode === 'rate' ? input.track_stock : false,
+        current_stock: input.pricing_mode === 'rate' && input.track_stock ? input.current_stock : null,
+        low_stock_alert: input.pricing_mode === 'rate' && input.track_stock ? input.low_stock_alert : null,
+      }
+
       if (productId) {
         const { error } = await supabase
           .from('products')
-          .update({
-            name: input.name,
-            category: input.category,
-            image_url: input.image_url,
-            updated_at: new Date().toISOString(),
-          })
+          .update({ ...productFields, updated_at: new Date().toISOString() })
           .eq('id', productId)
         if (error) throw error
       } else {
         const { data, error } = await supabase
           .from('products')
-          .insert({ name: input.name, category: input.category, image_url: input.image_url })
+          .insert(productFields)
           .select('id')
           .single()
         if (error) throw error
@@ -99,6 +117,7 @@ export function useSaveProduct() {
           .update({
             label: v.label,
             unit_price: v.unit_price,
+            cost_price: v.cost_price,
             track_stock: v.track_stock,
             current_stock: v.track_stock ? v.current_stock : null,
             low_stock_alert: v.track_stock ? v.low_stock_alert : null,
@@ -114,6 +133,7 @@ export function useSaveProduct() {
             product_id: productId,
             label: v.label,
             unit_price: v.unit_price,
+            cost_price: v.cost_price,
             track_stock: v.track_stock,
             current_stock: v.track_stock ? v.current_stock : null,
             low_stock_alert: v.track_stock ? v.low_stock_alert : null,

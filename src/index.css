@@ -30,6 +30,7 @@ select {
     -webkit-tap-highlight-color: transparent;
     scrollbar-width: none;
     -ms-overflow-style: none;
+    overflow-x: hidden;
   }
 
   html::-webkit-scrollbar {
@@ -41,6 +42,7 @@ select {
     color: var(--color-ink);
     font-family: var(--font-sans);
     font-variant-numeric: tabular-nums;
+    overflow-x: hidden;
   }
 }
 
